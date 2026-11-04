@@ -23,4 +23,13 @@ describe('public route rendering', () => {
     expect(router.currentRoute.value.fullPath).toBe(path);
     expect(router.currentRoute.value.matched.at(-1)?.components?.default).toBeDefined();
   });
+
+  it('uses distinct views for login and registration', () => {
+    const loginRoute = routes.find((route) => route.path === '/login');
+    const registerRoute = routes.find((route) => route.path === '/register');
+
+    expect(loginRoute?.component).toBeDefined();
+    expect(registerRoute?.component).toBeDefined();
+    expect(loginRoute?.component).not.toBe(registerRoute?.component);
+  });
 });
