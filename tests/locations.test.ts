@@ -8,20 +8,27 @@ describe('normalizeLocations', () => {
         {
           name: 'Paris',
           country: { code: 'FR', name: 'France' },
+          listings_count: 12,
         },
       ]),
-    ).toEqual([{ city: 'Paris', country: 'France', listings_count: undefined }]);
+    ).toEqual([{ city: 'Paris', country: 'France', listings_count: 12 }]);
   });
 
-  it('keeps locations returned by the has_listings API filter without a count field', () => {
+  it('keeps only locations with at least one listing', () => {
     expect(
       normalizeLocations([
         { name: 'Lyon', country_code: 'FR' },
         { name: 'Bruxelles', country: { name: 'Belgique' }, listings_count: 4 },
       ]),
-    ).toEqual([
-      { city: 'Lyon', country: 'FR', listings_count: undefined },
-      { city: 'Bruxelles', country: 'Belgique', listings_count: 4 },
-    ]);
+    ).toEqual([{ city: 'Bruxelles', country: 'Belgique', listings_count: 4 }]);
+  });
+
+  it('deduplicates city names regardless of case or accents', () => {
+    expect(
+      normalizeLocations([
+        { name: 'Paris', country: { code: 'FR', name: 'France' }, listings_count: 12 },
+        { name: ' paris ', country: { code: 'FR', name: 'FRANCE' }, listings_count: 8 },
+      ]),
+    ).toEqual([{ city: 'Paris', country: 'France', listings_count: 12 }]);
   });
 });
