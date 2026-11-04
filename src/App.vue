@@ -92,12 +92,12 @@ async function logout() {
 
 <template>
   <div
-    class="min-h-screen overflow-x-hidden bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
+    class="app-shell flex min-h-screen flex-col overflow-x-hidden bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
   >
     <header
       class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
     >
-      <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+      <nav class="mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <button
           type="button"
@@ -145,7 +145,7 @@ async function logout() {
           ><span class="mt-1.5 block h-0.5 w-5 bg-current"></span>
         </button>
         <div
-          class="absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 shadow-lg dark:border-stone-800 dark:bg-stone-950 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+          class="header-menu absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 shadow-lg dark:border-stone-800 dark:bg-stone-950 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
           :class="mobileMenuOpen ? 'block' : 'hidden lg:flex'"
         >
           <RouterLink
@@ -171,7 +171,9 @@ async function logout() {
         </div>
       </nav>
     </header>
-    <RouterView />
+    <div class="flex-1">
+      <RouterView />
+    </div>
     <div
       v-if="!ageConfirmed"
       class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 p-5 backdrop-blur-sm"
@@ -202,7 +204,9 @@ async function logout() {
         </nav>
       </section>
     </div>
-    <footer class="border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+    <footer
+      class="mt-auto border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
+    >
       <nav
         class="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 px-6 py-6 text-xs text-stone-500"
         aria-label="Legal links"
