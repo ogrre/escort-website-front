@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../lib/api';
 export interface Listing {
-  id: number;
+  id: string;
   slug: string;
   name: string;
   description: string;
@@ -10,10 +10,15 @@ export interface Listing {
   city: string;
   country: string;
   services: string[];
-  photos: { url: string; alt?: string }[];
+  photos: { id?: string; url: string; alt?: string }[];
   verified: boolean;
   boosted: boolean;
   status_text?: string;
+  availability?: Record<string, unknown>;
+  languages?: string[];
+  tags?: string[];
+  contacts?: Record<string, { enabled: boolean; value: string }>;
+  comments?: { id: string; body: string; author?: { name?: string } }[];
 }
 export const useListingsStore = defineStore('listings', () => {
   const listings = ref<Listing[]>([]);

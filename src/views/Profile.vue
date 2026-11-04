@@ -2,9 +2,12 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../lib/api';
+import type { Listing } from '../stores/listings';
 
 const route = useRoute();
-const listing = ref<any>(null);
+const listing = ref<Listing | null>(null);
+const loading = ref(true);
+const error = ref('');
 const commentBody = ref('');
 const commentMessage = ref('');
 const contactLabels: Record<string, string> = {
@@ -16,9 +19,9 @@ const contactLabels: Record<string, string> = {
   other: 'Autre',
 };
 const visibleContacts = computed<[string, { enabled: boolean; value: string }][]>(() =>
-  Object.entries(
-    (listing.value?.contacts ?? {}) as Record<string, { enabled: boolean; value: string }>,
-  ).filter(([, contact]) => contact.enabled && contact.value),
+  Object.entries(listing.value?.contacts ?? {}).filter(
+    ([, contact]) => contact.enabled && contact.value,
+  ),
 );
 
 function contactHref(type: string, value: string): string {
@@ -33,7 +36,7 @@ function contactHref(type: string, value: string): string {
 async function submitComment() {
   try {
     await api.post(
-      `/listings/${route.params.slug}/comments`,
+      `/listings/${route.params.id}/comments`,
       { body: commentBody.value },
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } },
     );
@@ -45,12 +48,24 @@ async function submitComment() {
 }
 
 onMounted(async () => {
-  listing.value = (await api.get(`/listings/${route.params.slug}`)).data.data;
+  try {
+    listing.value = (await api.get(`/listings/${route.params.id}`)).data.data;
+  } catch {
+    error.value = 'Ce profil n’est plus disponible.';
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
 
 <template>
-  <section v-if="listing" class="mx-auto max-w-6xl px-6 py-14">
+  <section v-if="loading" class="mx-auto max-w-6xl px-6 py-20 text-center text-stone-500">
+    Chargement du profil…
+  </section>
+  <section v-else-if="error" class="mx-auto max-w-6xl px-6 py-20 text-center text-red-700">
+    {{ error }}
+  </section>
+  <section v-else-if="listing" class="mx-auto max-w-6xl px-6 py-10 md:py-14">
     <div class="grid gap-12 md:grid-cols-2">
       <div class="grid grid-cols-2 gap-3">
         <img
@@ -72,6 +87,10 @@ onMounted(async () => {
           {{ listing.status_text }}
         </p>
         <p class="mt-8 whitespace-pre-line leading-8 text-zinc-600">{{ listing.description }}</p>
+        <div v-if="listing.languages?.length" class="mt-8">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-stone-500">Langues</h2>
+          <p class="mt-2 text-stone-700">{{ listing.languages.join(' · ') }}</p>
+        </div>
         <div class="mt-8 flex flex-wrap gap-2">
           <span
             v-for="service in listing.services"
@@ -80,9 +99,17 @@ onMounted(async () => {
             >{{ service }}</span
           >
         </div>
+        <div v-if="listing.tags?.length" class="mt-6 flex flex-wrap gap-2">
+          <span
+            v-for="tag in listing.tags"
+            :key="tag"
+            class="rounded-full bg-dusty/10 px-3 py-1 text-xs text-dusty-dark"
+            >{{ tag }}</span
+          >
+        </div>
         <div
           v-if="visibleContacts.length"
-          class="mt-10 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+          class="mt-10 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-stone-700"
         >
           <h2 class="text-lg font-medium">Contact direct</h2>
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -92,7 +119,7 @@ onMounted(async () => {
               :href="contactHref(type, contact.value)"
               target="_blank"
               rel="noopener noreferrer"
-              class="rounded-xl bg-zinc-50 px-4 py-3 text-sm transition hover:bg-dusty/10"
+              class="rounded-xl bg-zinc-50 px-4 py-3 text-sm transition hover:bg-dusty/10 dark:bg-stone-800"
               ><span class="block text-xs uppercase tracking-wide text-zinc-500">{{
                 contactLabels[type] || type
               }}</span
@@ -122,7 +149,7 @@ onMounted(async () => {
           minlength="10"
           maxlength="2000"
           placeholder="Votre commentaire (publication après modération)"
-          class="min-h-28 w-full rounded-xl border border-zinc-300 bg-white p-4 outline-none focus:border-dusty"
+          class="min-h-28 w-full rounded-xl border border-zinc-300 bg-white p-4 outline-none focus:border-dusty dark:border-stone-700 dark:bg-stone-900"
         ></textarea
         ><button class="mt-3 rounded-full bg-dusty px-6 py-3 font-medium text-white">
           Publier un commentaire
