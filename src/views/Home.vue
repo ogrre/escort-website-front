@@ -16,6 +16,8 @@ interface ApiLocation {
   country?: string;
   country_code?: string;
   name?: string;
+  slug?: string;
+  is_major?: boolean;
   listings_count?: number;
 }
 
@@ -26,34 +28,84 @@ const copy = computed(() =>
     ? {
         eyebrow: 'Annuaire',
         title: 'Choisissez une ville',
-        open: 'Ouvrir',
+        search: 'Chercher',
+        major: 'Villes principales',
+        withListings: 'Autres villes avec annonces',
         profiles: 'profils',
         empty: 'Aucune ville disponible pour le moment.',
+        searchEmpty: 'Aucune ville trouvée.',
       }
     : {
         eyebrow: 'Directory',
         title: 'Choose a city',
-        open: 'Open',
+        search: 'Search',
+        major: 'Major cities',
+        withListings: 'Other cities with listings',
         profiles: 'profiles',
         empty: 'No cities are available right now.',
+        searchEmpty: 'No city found.',
       },
 );
-const cities = ref<City[]>([]);
+const majorCities = ref<City[]>([]);
+const otherCities = ref<City[]>([]);
 const cityQuery = ref('');
 const citiesLoading = ref(true);
 const citiesError = ref('');
-const citiesByCountry = computed(() => {
+const searchResults = ref<City[]>([]);
+const searchLoading = ref(false);
+const searched = ref(false);
+const cities = computed(() => [...majorCities.value, ...otherCities.value]);
+const groupedMajorCities = computed(() => {
   const groups = new Map<string, City[]>();
-  cities.value.forEach((city) => {
+  majorCities.value.forEach((city) => {
+    const country = city.country || 'Autres pays';
+    groups.set(country, [...(groups.get(country) ?? []), city]);
+  });
+  return [...groups.entries()];
+});
+const groupedOtherCities = computed(() => {
+  const groups = new Map<string, City[]>();
+  otherCities.value.forEach((city) => {
     const country = city.country || 'Autres pays';
     groups.set(country, [...(groups.get(country) ?? []), city]);
   });
   return [...groups.entries()];
 });
 
-function submitCitySearch() {
-  const city = cityQuery.value.trim();
-  if (city) router.push(`/cities/${encodeURIComponent(city)}`);
+function normalizeLocations(items: ApiLocation[]): City[] {
+  return items
+    .map((item) => ({
+      city: item.city ?? item.name ?? '',
+      country: item.country ?? item.country_code ?? '',
+      listings_count: item.listings_count ?? 0,
+    }))
+    .filter((item) => item.city);
+}
+
+async function searchLocations() {
+  const query = cityQuery.value.trim();
+  if (!query) {
+    searched.value = false;
+    searchResults.value = [];
+    return;
+  }
+  searched.value = true;
+  searchLoading.value = true;
+  searchResults.value = [];
+  try {
+    const response = await api.get('/locations', {
+      params: { search: query, has_listings: 1 },
+    });
+    searchResults.value = normalizeLocations(response.data.data as ApiLocation[]);
+  } catch {
+    searchResults.value = [];
+  } finally {
+    searchLoading.value = false;
+  }
+}
+
+function openCity(city: string) {
+  router.push(`/cities/${encodeURIComponent(city)}`);
 }
 
 function updateCityStructuredData(items: City[]) {
@@ -87,14 +139,15 @@ onMounted(async () => {
   });
 
   try {
-    const citiesResponse = await api.get('/locations').catch(() => api.get('/cities'));
-    cities.value = (citiesResponse.data.data as ApiLocation[])
-      .map((item) => ({
-        city: item.city ?? item.name ?? '',
-        country: item.country ?? item.country_code ?? '',
-        listings_count: item.listings_count ?? 0,
-      }))
-      .filter((item) => item.city);
+    const [majorResponse, listedResponse] = await Promise.all([
+      api.get('/locations', { params: { is_major: 1, has_listings: 1 } }),
+      api.get('/locations', { params: { has_listings: 1 } }),
+    ]);
+    majorCities.value = normalizeLocations(majorResponse.data.data as ApiLocation[]);
+    const majorKeys = new Set(majorCities.value.map((item) => `${item.city}-${item.country}`));
+    otherCities.value = normalizeLocations(listedResponse.data.data as ApiLocation[]).filter(
+      (item) => !majorKeys.has(`${item.city}-${item.country}`),
+    );
     updateCityStructuredData(cities.value);
   } catch {
     citiesError.value = 'Les villes sont momentanément indisponibles.';
@@ -115,18 +168,39 @@ onMounted(async () => {
           </div>
           <form
             class="flex w-full max-w-md flex-col gap-2 sm:flex-row"
-            @submit.prevent="submitCitySearch"
+            @submit.prevent="searchLocations"
           >
             <label for="city-search" class="sr-only">Rechercher une ville</label>
             <input
               id="city-search"
               v-model="cityQuery"
-              class="min-w-0 flex-1 rounded-full border border-stone-300 bg-stone-50 px-5 py-3 outline-none transition focus:border-dusty focus:ring-2 focus:ring-dusty/30"
-              placeholder="Aller à une ville"
+              class="h-12 min-w-0 flex-1 rounded-full border border-stone-300 bg-stone-50 px-5 outline-none transition focus:border-dusty focus:ring-2 focus:ring-dusty/30"
+              :placeholder="locale === 'fr' ? 'Rechercher une ville' : 'Search for a city'"
               autocomplete="address-level2"
             />
-            <button class="button-primary w-full sm:w-auto">{{ copy.open }}</button>
+            <button class="button-primary h-12 w-full sm:w-auto">{{ copy.search }}</button>
           </form>
+        </div>
+        <div v-if="searched" class="relative mt-3 w-full max-w-md md:ml-auto">
+          <div v-if="searchLoading" class="text-sm text-stone-500">Chargement…</div>
+          <div
+            v-else-if="searchResults.length"
+            class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-lg dark:border-stone-800 dark:bg-stone-900"
+          >
+            <button
+              v-for="item in searchResults.slice(0, 6)"
+              :key="`${item.city}-${item.country}`"
+              type="button"
+              class="directory-search-result"
+              @click="openCity(item.city)"
+            >
+              <span>{{ item.city }}</span>
+              <span class="text-xs text-stone-500"
+                >{{ item.listings_count }} {{ copy.profiles }}</span
+              >
+            </button>
+          </div>
+          <p v-else class="text-sm text-stone-500">{{ copy.searchEmpty }}</p>
         </div>
       </div>
     </section>
@@ -141,26 +215,55 @@ onMounted(async () => {
           ></div>
         </div>
         <p v-else-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
-        <div v-else-if="cities.length" class="space-y-8">
-          <div v-for="[country, countryCities] in citiesByCountry" :key="country">
-            <h2
-              id="cities-title"
-              class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500"
+        <div v-else-if="cities.length" class="space-y-10">
+          <div>
+            <h2 id="cities-title" class="mb-4 text-xl font-medium">{{ copy.major }}</h2>
+            <div
+              v-for="[country, countryCities] in groupedMajorCities"
+              :key="`major-${country}`"
+              class="mb-6 last:mb-0"
             >
-              {{ country }}
-            </h2>
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <RouterLink
-                v-for="item in countryCities"
-                :key="`${item.city}-${item.country}`"
-                :to="`/cities/${encodeURIComponent(item.city)}`"
-                class="touch-target rounded-2xl border border-stone-200 bg-white p-4 transition hover:border-dusty hover:shadow-sm dark:border-stone-800 dark:bg-stone-900"
-              >
-                <span class="font-medium">{{ item.city }}</span>
-                <span class="mt-1 block text-sm text-stone-500"
-                  >{{ item.listings_count }} {{ copy.profiles }}</span
+              <h2 class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500">
+                {{ country }}
+              </h2>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <RouterLink
+                  v-for="item in countryCities"
+                  :key="`${item.city}-${item.country}`"
+                  :to="`/cities/${encodeURIComponent(item.city)}`"
+                  class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
                 >
-              </RouterLink>
+                  <span class="font-medium">{{ item.city }}</span>
+                  <span class="mt-1 block text-sm text-stone-500"
+                    >{{ item.listings_count }} {{ copy.profiles }}</span
+                  >
+                </RouterLink>
+              </div>
+            </div>
+          </div>
+          <div v-if="otherCities.length">
+            <h2 class="mb-4 text-xl font-medium">{{ copy.withListings }}</h2>
+            <div
+              v-for="[country, countryCities] in groupedOtherCities"
+              :key="`other-${country}`"
+              class="mb-6 last:mb-0"
+            >
+              <h3 class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500">
+                {{ country }}
+              </h3>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <RouterLink
+                  v-for="item in countryCities"
+                  :key="`${item.city}-${item.country}`"
+                  :to="`/cities/${encodeURIComponent(item.city)}`"
+                  class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
+                >
+                  <span class="font-medium">{{ item.city }}</span>
+                  <span class="mt-1 block text-sm text-stone-500"
+                    >{{ item.listings_count }} {{ copy.profiles }}</span
+                  >
+                </RouterLink>
+              </div>
             </div>
           </div>
         </div>
