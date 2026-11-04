@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  @apply bg-stone-50 text-stone-900 antialiased;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.brand-mark {
+  @apply text-lg font-medium tracking-[.28em] text-stone-900;
+}
+.nav-link {
+  @apply text-sm font-medium text-stone-600 transition hover:text-dusty-dark;
+}
+.nav-cta {
+  @apply rounded-full bg-stone-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-dusty-dark;
+}
+.soft-card {
+  @apply rounded-3xl border border-stone-200/80 bg-white shadow-[0_20px_60px_-35px_rgba(41,37,36,.35)];
+}
+.eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[.24em] text-dusty-dark;
+}
+.hero-glow {
+  background: radial-gradient(circle at 80% 20%, rgba(190, 154, 130, 0.16), transparent 34rem);
+}

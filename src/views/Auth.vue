@@ -1,0 +1,191 @@
+<script setup lang="ts">
+import { computed, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import { api } from '../lib/api';
+
+const router = useRouter();
+const route = useRoute();
+const mode = ref<'register' | 'login'>(route.path === '/login' ? 'login' : 'register');
+const loading = ref(false);
+const error = ref('');
+const notice = ref(
+  route.query.registered
+    ? 'Account created. Check your email to verify your address, then log in.'
+    : '',
+);
+const errors = ref<Record<string, string[]>>({});
+const form = reactive({
+  name: '',
+  email: '',
+  password: '',
+  password_confirmation: '',
+  role: 'visitor',
+});
+
+const title = computed(() => (mode.value === 'register' ? 'Créer votre compte' : 'Se connecter'));
+
+function switchMode(next: 'register' | 'login') {
+  mode.value = next;
+  error.value = '';
+  notice.value = '';
+  errors.value = {};
+  router.replace(next === 'login' ? '/login' : '/register');
+}
+
+function messageFor(field: string) {
+  return errors.value[field]?.[0] ?? '';
+}
+
+function apiErrorMessage(value: unknown) {
+  if (axios.isAxiosError(value)) {
+    const data = value.response?.data as
+      { message?: string; errors?: Record<string, string[]> } | undefined;
+    errors.value = data?.errors ?? {};
+    return data?.message ?? 'Impossible de traiter la demande.';
+  }
+  return 'Une erreur inattendue est survenue.';
+}
+
+async function submit() {
+  loading.value = true;
+  error.value = '';
+  errors.value = {};
+  try {
+    const endpoint = mode.value === 'register' ? '/auth/register' : '/auth/login';
+    const payload =
+      mode.value === 'register' ? { ...form } : { email: form.email, password: form.password };
+    const response = await api.post(endpoint, payload);
+    if (mode.value === 'register') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      await router.push('/login?registered=1');
+      return;
+    }
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    await router.push(response.data.user.role === 'advertiser' ? '/dashboard' : '/');
+  } catch (reason: unknown) {
+    error.value = apiErrorMessage(reason);
+  } finally {
+    loading.value = false;
+  }
+}
+</script>
+
+<template>
+  <main
+    class="mx-auto grid min-h-[calc(100vh-80px)] max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2"
+  >
+    <div>
+      <p class="mb-4 uppercase tracking-[.35em] text-dusty-dark">Espace privé</p>
+      <h1 class="max-w-lg text-5xl font-light leading-tight">{{ title }}</h1>
+      <p class="mt-6 max-w-md text-zinc-600">
+        Enregistrez vos préférences et profitez d’une expérience discrète et personnalisée.
+      </p>
+    </div>
+
+    <section class="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm md:p-10">
+      <div class="mb-8 flex rounded-full bg-zinc-100 p-1 text-sm">
+        <button
+          class="flex-1 rounded-full px-4 py-2"
+          :class="mode === 'register' ? 'bg-white shadow-sm' : 'text-zinc-500'"
+          @click="switchMode('register')"
+        >
+          Créer un compte
+        </button>
+        <button
+          class="flex-1 rounded-full px-4 py-2"
+          :class="mode === 'login' ? 'bg-white shadow-sm' : 'text-zinc-500'"
+          @click="switchMode('login')"
+        >
+          Connexion
+        </button>
+      </div>
+
+      <form class="space-y-5" @submit.prevent="submit">
+        <p v-if="notice" class="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+          {{ notice }}
+        </p>
+        <label v-if="mode === 'register'" class="block text-sm font-medium"
+          >Nom ou pseudonyme
+          <input
+            v-model="form.name"
+            required
+            maxlength="120"
+            class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
+            autocomplete="name"
+          />
+          <span v-if="messageFor('name')" class="mt-1 block text-xs text-red-600">{{
+            messageFor('name')
+          }}</span>
+        </label>
+
+        <label class="block text-sm font-medium"
+          >Adresse e-mail
+          <input
+            v-model="form.email"
+            required
+            type="email"
+            class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
+            autocomplete="email"
+          />
+          <span v-if="messageFor('email')" class="mt-1 block text-xs text-red-600">{{
+            messageFor('email')
+          }}</span>
+        </label>
+
+        <label v-if="mode === 'register'" class="block text-sm font-medium"
+          >Je souhaite créer un compte
+          <select
+            v-model="form.role"
+            class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
+          >
+            <option value="visitor">Visiteur</option>
+            <option value="advertiser">Annonceur / modèle</option>
+          </select>
+        </label>
+
+        <label class="block text-sm font-medium"
+          >Mot de passe
+          <input
+            v-model="form.password"
+            required
+            type="password"
+            minlength="8"
+            class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
+            autocomplete="new-password"
+          />
+          <span v-if="messageFor('password')" class="mt-1 block text-xs text-red-600">{{
+            messageFor('password')
+          }}</span>
+        </label>
+
+        <label v-if="mode === 'register'" class="block text-sm font-medium"
+          >Confirmer le mot de passe
+          <input
+            v-model="form.password_confirmation"
+            required
+            type="password"
+            minlength="8"
+            class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
+            autocomplete="new-password"
+          />
+          <span
+            v-if="messageFor('password_confirmation')"
+            class="mt-1 block text-xs text-red-600"
+            >{{ messageFor('password_confirmation') }}</span
+          >
+        </label>
+
+        <p v-if="error" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
+        <button
+          :disabled="loading"
+          class="w-full rounded-full bg-dusty px-6 py-3 font-medium text-white disabled:cursor-wait disabled:opacity-60"
+        >
+          {{ loading ? 'Chargement…' : mode === 'register' ? 'Créer mon compte' : 'Se connecter' }}
+        </button>
+      </form>
+    </section>
+  </main>
+</template>
