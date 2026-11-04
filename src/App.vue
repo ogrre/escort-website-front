@@ -1,11 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from './lib/api';
+import { confirmAge, hasAgeConfirmation } from './lib/age-gate';
 
 const router = useRouter();
 const mobileMenuOpen = ref(false);
+const ageConfirmed = ref(false);
 const isAuthenticated = computed(() => Boolean(localStorage.getItem('token')));
+
+onMounted(() => {
+  ageConfirmed.value = hasAgeConfirmation(localStorage);
+});
+
+function acceptAge() {
+  confirmAge(localStorage);
+  ageConfirmed.value = true;
+}
 
 async function logout() {
   try {
@@ -67,5 +78,55 @@ async function logout() {
       </nav>
     </header>
     <RouterView />
+    <div
+      v-if="!ageConfirmed"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 p-5 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="age-gate-title"
+    >
+      <section class="max-w-lg rounded-3xl bg-white p-7 shadow-2xl md:p-10">
+        <p class="eyebrow">Accès réservé aux adultes</p>
+        <h1 id="age-gate-title" class="mt-3 text-3xl font-light">Avez-vous 18 ans ou plus ?</h1>
+        <p class="mt-5 leading-7 text-stone-600">
+          Vous devez confirmer être majeur(e) avant d’accéder au site. Cette confirmation est
+          mémorisée uniquement dans le stockage local de votre navigateur.
+        </p>
+        <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white"
+            @click="acceptAge"
+          >
+            Oui, j’ai 18 ans ou plus
+          </button>
+          <a
+            href="https://www.google.com/"
+            class="rounded-full border border-stone-300 px-5 py-3 text-center text-sm font-medium"
+          >
+            Non, quitter le site
+          </a>
+        </div>
+        <nav
+          class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500"
+          aria-label="Legal information"
+        >
+          <RouterLink to="/mentions-legales">Mentions légales</RouterLink>
+          <RouterLink to="/confidentialite">Confidentialité</RouterLink>
+          <RouterLink to="/cookies">Cookies</RouterLink>
+        </nav>
+      </section>
+    </div>
+    <footer class="border-t border-stone-200 bg-white">
+      <nav
+        class="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 px-6 py-6 text-xs text-stone-500"
+        aria-label="Legal links"
+      >
+        <RouterLink to="/mentions-legales">Mentions légales</RouterLink>
+        <RouterLink to="/confidentialite">Politique de confidentialité</RouterLink>
+        <RouterLink to="/cookies">Cookies et traceurs</RouterLink>
+        <RouterLink to="/cgu">CGU</RouterLink>
+      </nav>
+    </footer>
   </div>
 </template>

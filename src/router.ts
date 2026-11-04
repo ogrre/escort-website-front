@@ -6,6 +6,7 @@ import Dashboard from './views/Dashboard.vue';
 import Admin from './views/Admin.vue';
 import Auth from './views/Auth.vue';
 import CityLanding from './views/CityLanding.vue';
+import Legal from './views/Legal.vue';
 export const routes = [
   { path: '/', component: Home },
   { path: '/search', component: Search },
@@ -18,6 +19,10 @@ export const routes = [
   { path: '/register', component: Auth },
   { path: '/compte', redirect: '/login' },
   { path: '/admin', component: Admin },
+  { path: '/mentions-legales', component: Legal, meta: { legalPage: 'legal' } },
+  { path: '/confidentialite', component: Legal, meta: { legalPage: 'privacy' } },
+  { path: '/cookies', component: Legal, meta: { legalPage: 'cookies' } },
+  { path: '/cgu', component: Legal, meta: { legalPage: 'terms' } },
 ];
 
 export default createRouter({
