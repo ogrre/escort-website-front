@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { legal } from '../lib/legal';
+import { setSeo } from '../lib/seo';
 
 type LegalPage = 'legal' | 'privacy' | 'cookies' | 'terms';
 
@@ -16,6 +17,14 @@ const title = computed(
       terms: 'Conditions générales d’utilisation',
     })[page.value],
 );
+
+watchEffect(() => {
+  setSeo({
+    title: `${title.value} | Élégance`,
+    description: `${title.value} du site Élégance.`,
+    canonical: `${window.location.origin}${route.path}`,
+  });
+});
 </script>
 
 <template>

@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { api } from '../lib/api';
 import { setSeo } from '../lib/seo';
+import ListingCard from '../components/ListingCard.vue';
+import { useListingsStore } from '../stores/listings';
 
 interface City {
   city: string;
@@ -9,6 +11,7 @@ interface City {
   listings_count: number;
 }
 const cities = ref<City[]>([]);
+const listings = useListingsStore();
 const cityQuery = ref('');
 const isLoading = ref(true);
 const loadError = ref('');
@@ -47,9 +50,9 @@ function updateCityStructuredData(items: City[]) {
 }
 onMounted(async () => {
   setSeo({
-    title: 'Escort profiles by city in France | Élégance',
+    title: 'Profils d’escorts par ville en France | Élégance',
     description:
-      'Explore verified and discreet escort profiles by city in France. Choose a city to discover local listings on Élégance.',
+      'Trouvez des profils disponibles par ville en France. Choisissez une ville et parcourez les annonces sur Élégance.',
     canonical: `${window.location.origin}/`,
   });
   try {
@@ -60,6 +63,7 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
+  await listings.search({ limit: '6' });
 });
 </script>
 
@@ -69,11 +73,10 @@ onMounted(async () => {
       <div class="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-20">
         <p class="eyebrow">Explore by location</p>
         <h1 class="mt-3 max-w-4xl text-4xl font-light leading-tight md:text-6xl">
-          Find escort profiles in your city.
+          Trouvez un profil dans votre ville.
         </h1>
         <p class="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
-          Start with a city to discover local profiles, clear information and a more discreet way to
-          explore.
+          Parcourez des profils disponibles et commencez par une ville.
         </p>
         <form
           class="soft-card mt-8 flex max-w-2xl items-center gap-3 p-2"
@@ -85,17 +88,50 @@ onMounted(async () => {
             id="city-search"
             v-model="cityQuery"
             class="min-w-0 flex-1 bg-transparent px-1 py-3 outline-none"
-            placeholder="Search for a city"
+            placeholder="Rechercher une ville"
             autocomplete="address-level2"
           />
           <button
             class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-dusty-dark"
           >
-            Search
+            Rechercher
           </button>
         </form>
         <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-stone-500">
-          <span>Adults only</span><span>Privacy first</span><span>Local search</span>
+          <span>18+</span><span>Profils locaux</span><span>Navigation discrète</span>
+        </div>
+      </div>
+    </section>
+    <section
+      v-if="listings.loading || listings.listings.length"
+      class="border-b border-stone-200 bg-white"
+      aria-labelledby="featured-listings-title"
+    >
+      <div class="mx-auto max-w-7xl px-6 py-12 md:py-16">
+        <div class="flex items-end justify-between gap-4">
+          <div>
+            <p class="eyebrow">Profils disponibles</p>
+            <h2 id="featured-listings-title" class="mt-2 text-3xl font-light">
+              Découvrez les derniers profils
+            </h2>
+          </div>
+          <RouterLink to="/search" class="text-sm font-medium text-dusty-dark hover:underline">
+            Tout voir →
+          </RouterLink>
+        </div>
+        <div v-if="listings.loading" class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="item in 3"
+            :key="item"
+            class="aspect-[4/5] animate-pulse rounded-3xl bg-stone-100"
+          ></div>
+        </div>
+        <div v-else class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ListingCard
+            v-for="listing in listings.listings.slice(0, 6)"
+            :key="listing.id"
+            :listing="listing"
+          />
         </div>
       </div>
     </section>
@@ -104,10 +140,10 @@ onMounted(async () => {
         <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p class="eyebrow">City directory</p>
-            <h2 id="city-directory-title" class="mt-2 text-3xl font-light">Choose a city</h2>
+            <h2 id="city-directory-title" class="mt-2 text-3xl font-light">Choisissez une ville</h2>
           </div>
           <RouterLink to="/search" class="text-sm font-medium text-dusty-dark hover:underline">
-            View all listings →
+            Voir tous les profils →
           </RouterLink>
         </div>
         <div
@@ -132,23 +168,11 @@ onMounted(async () => {
             class="soft-card p-5 transition hover:-translate-y-1 hover:border-dusty"
           >
             <span class="text-xl">{{ item.city }}</span
-            ><span class="mt-2 block text-sm text-zinc-500"
-              >{{ item.listings_count }} profiles</span
-            >
+            ><span class="mt-2 block text-sm text-zinc-500">{{ item.listings_count }} profils</span>
           </RouterLink>
         </div>
         <p v-if="!isLoading && !loadError && !filteredCities.length" class="mt-8 text-zinc-500">
-          City pages will appear as listings are published.
-        </p>
-      </div>
-    </section>
-    <section class="bg-stone-50">
-      <div class="mx-auto max-w-3xl px-6 py-14 text-center md:py-20">
-        <p class="eyebrow">A local-first experience</p>
-        <h2 class="mt-3 text-3xl font-light">Explore with your city as the starting point.</h2>
-        <p class="mt-5 leading-8 text-stone-600">
-          Every city page is designed to make discovery simple: browse available profiles, compare
-          useful details and return to the directory whenever you want to explore somewhere new.
+          Les villes apparaîtront dès que des profils seront publiés.
         </p>
       </div>
     </section>
