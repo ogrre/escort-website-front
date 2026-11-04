@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    name: Lint and build
+  lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,11 +30,58 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run typecheck
+        run: npm run typecheck
+
       - name: Build frontend
         run: npm run build
 
+  promotion-policy:
+    name: promotion-policy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
       - name: Check ref promotion policy
-        if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref != 'dev'
         run: |
-          echo "Only the dev branch may open a pull request against main."
-          exit 1
+          if [ "${{ github.base_ref }}" = "main" ] && [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "Only the dev branch may open a pull request against main."
+            exit 1
+          fi
+          echo "Promotion policy passed."
