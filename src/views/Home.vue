@@ -18,7 +18,7 @@ const copy = computed(() =>
         withListings: 'Autres villes avec annonces',
         profiles: 'annonces disponibles',
         ctaEyebrow: 'Pas encore inscrit ?',
-        ctaTitle: 'Créez votre compte gratuitement',
+        ctaTitle: 'Créez votre compte',
         ctaButton: 'Créer un compte',
         advantages: [
           'Enregistrer vos favoris',
@@ -37,7 +37,7 @@ const copy = computed(() =>
         withListings: 'Other cities with listings',
         profiles: 'listings available',
         ctaEyebrow: 'Not registered yet?',
-        ctaTitle: 'Create your free account',
+        ctaTitle: 'Create your account',
         ctaButton: 'Create an account',
         advantages: ['Save favourites', 'Contact profiles', 'Get alerts', 'Manage your listings'],
         empty: 'No cities are available right now.',
