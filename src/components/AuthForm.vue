@@ -4,14 +4,14 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { api } from '../lib/api';
 
+const props = defineProps<{ mode: 'register' | 'login' }>();
 const router = useRouter();
 const route = useRoute();
-const mode = ref<'register' | 'login'>(route.path === '/login' ? 'login' : 'register');
 const loading = ref(false);
 const error = ref('');
 const notice = ref(
-  route.query.registered
-    ? 'Account created. Check your email to verify your address, then log in.'
+  props.mode === 'login' && route.query.registered
+    ? 'Compte créé. Vérifiez votre e-mail, puis connectez-vous.'
     : '',
 );
 const errors = ref<Record<string, string[]>>({});
@@ -23,15 +23,8 @@ const form = reactive({
   role: 'visitor',
 });
 
-const title = computed(() => (mode.value === 'register' ? 'Créer votre compte' : 'Se connecter'));
-
-function switchMode(next: 'register' | 'login') {
-  mode.value = next;
-  error.value = '';
-  notice.value = '';
-  errors.value = {};
-  router.replace(next === 'login' ? '/login' : '/register');
-}
+const isRegister = computed(() => props.mode === 'register');
+const title = computed(() => (isRegister.value ? 'Créer votre compte' : 'Se connecter'));
 
 function messageFor(field: string) {
   return errors.value[field]?.[0] ?? '';
@@ -52,11 +45,10 @@ async function submit() {
   error.value = '';
   errors.value = {};
   try {
-    const endpoint = mode.value === 'register' ? '/auth/register' : '/auth/login';
-    const payload =
-      mode.value === 'register' ? { ...form } : { email: form.email, password: form.password };
+    const endpoint = isRegister.value ? '/auth/register' : '/auth/login';
+    const payload = isRegister.value ? { ...form } : { email: form.email, password: form.password };
     const response = await api.post(endpoint, payload);
-    if (mode.value === 'register') {
+    if (isRegister.value) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       await router.push('/login?registered=1');
@@ -86,29 +78,12 @@ async function submit() {
     </div>
 
     <section class="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm md:p-10">
-      <div class="mb-8 flex rounded-full bg-zinc-100 p-1 text-sm">
-        <button
-          class="flex-1 rounded-full px-4 py-2"
-          :class="mode === 'register' ? 'bg-white shadow-sm' : 'text-zinc-500'"
-          @click="switchMode('register')"
-        >
-          Créer un compte
-        </button>
-        <button
-          class="flex-1 rounded-full px-4 py-2"
-          :class="mode === 'login' ? 'bg-white shadow-sm' : 'text-zinc-500'"
-          @click="switchMode('login')"
-        >
-          Connexion
-        </button>
-      </div>
-
       <form class="space-y-5" @submit.prevent="submit">
         <p v-if="notice" class="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
           {{ notice }}
         </p>
-        <label v-if="mode === 'register'" class="block text-sm font-medium"
-          >Nom ou pseudonyme
+        <label v-if="isRegister" class="block text-sm font-medium">
+          Nom ou pseudonyme
           <input
             v-model="form.name"
             required
@@ -121,8 +96,8 @@ async function submit() {
           }}</span>
         </label>
 
-        <label class="block text-sm font-medium"
-          >Adresse e-mail
+        <label class="block text-sm font-medium">
+          Adresse e-mail
           <input
             v-model="form.email"
             required
@@ -135,8 +110,8 @@ async function submit() {
           }}</span>
         </label>
 
-        <label v-if="mode === 'register'" class="block text-sm font-medium"
-          >Je souhaite créer un compte
+        <label v-if="isRegister" class="block text-sm font-medium">
+          Je souhaite créer un compte
           <select
             v-model="form.role"
             class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
@@ -146,23 +121,23 @@ async function submit() {
           </select>
         </label>
 
-        <label class="block text-sm font-medium"
-          >Mot de passe
+        <label class="block text-sm font-medium">
+          Mot de passe
           <input
             v-model="form.password"
             required
             type="password"
             minlength="8"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
-            autocomplete="new-password"
+            :autocomplete="isRegister ? 'new-password' : 'current-password'"
           />
           <span v-if="messageFor('password')" class="mt-1 block text-xs text-red-600">{{
             messageFor('password')
           }}</span>
         </label>
 
-        <label v-if="mode === 'register'" class="block text-sm font-medium"
-          >Confirmer le mot de passe
+        <label v-if="isRegister" class="block text-sm font-medium">
+          Confirmer le mot de passe
           <input
             v-model="form.password_confirmation"
             required
@@ -180,10 +155,11 @@ async function submit() {
 
         <p v-if="error" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
         <button
+          type="submit"
           :disabled="loading"
-          class="w-full rounded-full bg-dusty px-6 py-3 font-medium text-white disabled:cursor-wait disabled:opacity-60"
+          class="button-primary w-full rounded-full focus:outline-none focus:ring-2 focus:ring-dusty focus:ring-offset-2 focus:ring-offset-stone-50"
         >
-          {{ loading ? 'Chargement…' : mode === 'register' ? 'Créer mon compte' : 'Se connecter' }}
+          {{ loading ? 'Chargement…' : isRegister ? 'Créer mon compte' : 'Se connecter' }}
         </button>
       </form>
     </section>
