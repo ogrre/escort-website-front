@@ -25,12 +25,13 @@ function submitCitySearch() {
 }
 function updateCityStructuredData(items: City[]) {
   const id = 'city-directory-schema';
-  let script = document.getElementById(id) as HTMLScriptElement | null;
+  let script = document.getElementById(id);
   if (!script) {
-    script = document.createElement('script');
-    script.id = id;
-    script.type = 'application/ld+json';
-    document.head.appendChild(script);
+    const element = document.createElement('script');
+    element.id = id;
+    element.type = 'application/ld+json';
+    document.head.appendChild(element);
+    script = element;
   }
   script.textContent = JSON.stringify({
     '@context': 'https://schema.org',
