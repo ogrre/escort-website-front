@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import ListingCard from '../components/ListingCard.vue';
 import { api } from '../lib/api';
 import { setSeo } from '../lib/seo';
-import { useListingsStore } from '../stores/listings';
+import { localeKey, type Locale } from '../lib/locale';
 
 interface City {
   city: string;
@@ -12,12 +11,45 @@ interface City {
   listings_count: number;
 }
 
+interface ApiLocation {
+  city?: string;
+  country?: string;
+  country_code?: string;
+  name?: string;
+  listings_count?: number;
+}
+
 const router = useRouter();
-const listings = useListingsStore();
+const locale = inject(localeKey, ref<Locale>('fr'));
+const copy = computed(() =>
+  locale.value === 'fr'
+    ? {
+        eyebrow: 'Annuaire',
+        title: 'Choisissez une ville',
+        open: 'Ouvrir',
+        profiles: 'profils',
+        empty: 'Aucune ville disponible pour le moment.',
+      }
+    : {
+        eyebrow: 'Directory',
+        title: 'Choose a city',
+        open: 'Open',
+        profiles: 'profiles',
+        empty: 'No cities are available right now.',
+      },
+);
 const cities = ref<City[]>([]);
 const cityQuery = ref('');
 const citiesLoading = ref(true);
 const citiesError = ref('');
+const citiesByCountry = computed(() => {
+  const groups = new Map<string, City[]>();
+  cities.value.forEach((city) => {
+    const country = city.country || 'Autres pays';
+    groups.set(country, [...(groups.get(country) ?? []), city]);
+  });
+  return [...groups.entries()];
+});
 
 function submitCitySearch() {
   const city = cityQuery.value.trim();
@@ -55,11 +87,14 @@ onMounted(async () => {
   });
 
   try {
-    const [citiesResponse] = await Promise.all([
-      api.get('/cities'),
-      listings.search({ limit: '12' }),
-    ]);
-    cities.value = citiesResponse.data.data;
+    const citiesResponse = await api.get('/locations').catch(() => api.get('/cities'));
+    cities.value = (citiesResponse.data.data as ApiLocation[])
+      .map((item) => ({
+        city: item.city ?? item.name ?? '',
+        country: item.country ?? item.country_code ?? '',
+        listings_count: item.listings_count ?? 0,
+      }))
+      .filter((item) => item.city);
     updateCityStructuredData(cities.value);
   } catch {
     citiesError.value = 'Les villes sont momentanément indisponibles.';
@@ -72,11 +107,11 @@ onMounted(async () => {
 <template>
   <main>
     <section class="border-b border-stone-200 bg-white dark:border-stone-800">
-      <div class="mx-auto max-w-7xl px-6 py-8 md:py-10">
+      <div class="mx-auto max-w-7xl px-5 py-7 md:px-6 md:py-10">
         <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p class="eyebrow">Annuaire</p>
-            <h1 class="mt-2 text-3xl font-light md:text-4xl">Profils disponibles</h1>
+            <p class="eyebrow">{{ copy.eyebrow }}</p>
+            <h1 class="mt-2 text-3xl font-light md:text-4xl">{{ copy.title }}</h1>
           </div>
           <form
             class="flex w-full max-w-md flex-col gap-2 sm:flex-row"
@@ -90,76 +125,48 @@ onMounted(async () => {
               placeholder="Aller à une ville"
               autocomplete="address-level2"
             />
-            <button class="button-primary w-full sm:w-auto">Ouvrir</button>
+            <button class="button-primary w-full sm:w-auto">{{ copy.open }}</button>
           </form>
         </div>
-        <nav
-          v-if="!citiesLoading && cities.length"
-          class="mt-7 flex gap-2 overflow-x-auto pb-1"
-          aria-label="Villes populaires"
-        >
-          <RouterLink
-            v-for="item in cities.slice(0, 8)"
-            :key="`${item.city}-${item.country}`"
-            :to="`/cities/${encodeURIComponent(item.city)}`"
-            class="touch-target whitespace-nowrap rounded-full border border-stone-200 px-4 py-3 text-sm text-stone-600 transition hover:border-dusty hover:text-dusty-dark"
-          >
-            {{ item.city }}
-          </RouterLink>
-        </nav>
       </div>
     </section>
 
-    <section class="bg-stone-50 dark:bg-stone-950" aria-labelledby="profiles-title">
-      <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
-        <div v-if="listings.loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="item in 6"
-            :key="item"
-            class="aspect-[4/5] animate-pulse rounded-3xl bg-stone-200"
-          ></div>
-        </div>
-        <p v-else-if="listings.error" class="rounded-2xl bg-red-50 p-5 text-sm text-red-700">
-          {{ listings.error }}
-        </p>
-        <div v-else-if="listings.listings.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <ListingCard v-for="listing in listings.listings" :key="listing.id" :listing="listing" />
-        </div>
-        <div
-          v-else
-          class="rounded-3xl border border-dashed border-stone-300 bg-white p-10 text-center"
-        >
-          <h2 id="profiles-title" class="text-2xl font-light">Aucun profil disponible</h2>
-          <p class="mt-3 text-stone-500">Choisissez une ville pour parcourir son annuaire.</p>
-        </div>
-      </div>
-    </section>
-
-    <section
-      class="border-t border-stone-200 bg-white dark:border-stone-800"
-      aria-labelledby="cities-title"
-    >
-      <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
-        <h2 id="cities-title" class="text-2xl font-light">Toutes les villes</h2>
-        <p v-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
-        <div v-else-if="citiesLoading" class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <section class="bg-stone-50 dark:bg-stone-950" aria-labelledby="cities-title">
+      <div class="mx-auto max-w-7xl px-5 py-8 md:px-6 md:py-14">
+        <div v-if="citiesLoading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div
             v-for="item in 8"
             :key="item"
-            class="h-16 animate-pulse rounded-2xl bg-stone-100"
+            class="h-16 animate-pulse rounded-2xl bg-stone-200"
           ></div>
         </div>
-        <div v-else class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <RouterLink
-            v-for="item in cities"
-            :key="`${item.city}-${item.country}`"
-            :to="`/cities/${encodeURIComponent(item.city)}`"
-            class="touch-target rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-dusty hover:bg-white"
-          >
-            <span class="font-medium">{{ item.city }}</span>
-            <span class="mt-1 block text-sm text-stone-500">{{ item.listings_count }} profils</span>
-          </RouterLink>
+        <p v-else-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
+        <div v-else-if="cities.length" class="space-y-8">
+          <div v-for="[country, countryCities] in citiesByCountry" :key="country">
+            <h2
+              id="cities-title"
+              class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500"
+            >
+              {{ country }}
+            </h2>
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <RouterLink
+                v-for="item in countryCities"
+                :key="`${item.city}-${item.country}`"
+                :to="`/cities/${encodeURIComponent(item.city)}`"
+                class="touch-target rounded-2xl border border-stone-200 bg-white p-4 transition hover:border-dusty hover:shadow-sm dark:border-stone-800 dark:bg-stone-900"
+              >
+                <span class="font-medium">{{ item.city }}</span>
+                <span class="mt-1 block text-sm text-stone-500"
+                  >{{ item.listings_count }} {{ copy.profiles }}</span
+                >
+              </RouterLink>
+            </div>
+          </div>
         </div>
+        <p v-else class="rounded-2xl border border-dashed border-stone-300 p-6 text-stone-500">
+          {{ copy.empty }}
+        </p>
       </div>
     </section>
   </main>
