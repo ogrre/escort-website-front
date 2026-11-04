@@ -101,7 +101,7 @@ async function logout() {
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <button
           type="button"
-          class="theme-toggle touch-target order-2 lg:order-none"
+          class="theme-toggle touch-target"
           :aria-label="themeLabel"
           :title="themeLabel"
           :aria-pressed="darkMode"
@@ -121,7 +121,7 @@ async function logout() {
           </svg>
           <span class="sr-only">{{ themeLabel }}</span>
         </button>
-        <div class="locale-switcher order-3 lg:order-none" aria-label="Language">
+        <div class="locale-switcher" aria-label="Language">
           <button
             v-for="option in ['fr', 'en'] as Locale[]"
             :key="option"
