@@ -15,15 +15,38 @@ export interface City {
   listings_count?: number;
 }
 
+export function locationKey(location: Pick<City, 'city' | 'country'>): string {
+  return normalizeText(location.city) + '|' + normalizeText(location.country);
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toLocaleLowerCase();
+}
+
 export function normalizeLocations(items: ApiLocation[]): City[] {
-  return items
+  const locations = items
     .map((item) => ({
-      city: item.city ?? item.name ?? '',
+      city: (item.city ?? item.name ?? '').trim(),
       country:
         typeof item.country === 'string'
-          ? item.country
-          : (item.country?.name ?? item.country_code ?? ''),
+          ? item.country.trim()
+          : (item.country?.name?.trim() ?? item.country_code ?? ''),
       listings_count: item.listings_count ?? item.profiles_count,
     }))
-    .filter((item) => item.city);
+    .filter((item) => item.city && (item.listings_count ?? 0) > 0);
+
+  const uniqueLocations = new Map<string, City>();
+  locations.forEach((location) => {
+    const key = locationKey(location);
+    const previous = uniqueLocations.get(key);
+    if (!previous || (location.listings_count ?? 0) > (previous.listings_count ?? 0)) {
+      uniqueLocations.set(key, location);
+    }
+  });
+
+  return [...uniqueLocations.values()];
 }
