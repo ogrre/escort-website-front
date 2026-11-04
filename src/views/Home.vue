@@ -17,6 +17,15 @@ const copy = computed(() =>
         major: 'Villes principales',
         withListings: 'Autres villes avec annonces',
         profiles: 'annonces disponibles',
+        ctaEyebrow: 'Pas encore inscrit ?',
+        ctaTitle: 'Créez votre compte gratuitement',
+        ctaButton: 'Créer un compte',
+        advantages: [
+          'Enregistrer vos favoris',
+          'Contacter les profils',
+          'Recevoir des alertes',
+          'Gérer vos annonces',
+        ],
         empty: 'Aucune ville disponible pour le moment.',
         searchEmpty: 'Aucune ville trouvée.',
       }
@@ -27,6 +36,10 @@ const copy = computed(() =>
         major: 'Major cities',
         withListings: 'Other cities with listings',
         profiles: 'listings available',
+        ctaEyebrow: 'Not registered yet?',
+        ctaTitle: 'Create your free account',
+        ctaButton: 'Create an account',
+        advantages: ['Save favourites', 'Contact profiles', 'Get alerts', 'Manage your listings'],
         empty: 'No cities are available right now.',
         searchEmpty: 'No city found.',
       },
@@ -135,11 +148,11 @@ onMounted(async () => {
 <template>
   <main>
     <section class="border-b border-stone-200 bg-white dark:border-stone-800">
-      <div class="mx-auto max-w-7xl px-5 py-7 md:px-6 md:py-10">
-        <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div class="mx-auto max-w-7xl px-5 py-5 md:px-6 md:py-7">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p class="eyebrow">{{ copy.eyebrow }}</p>
-            <h1 class="mt-2 text-3xl font-light md:text-4xl">{{ copy.title }}</h1>
+            <h1 class="mt-1 text-2xl font-light md:text-3xl">{{ copy.title }}</h1>
           </div>
           <form
             class="flex w-full max-w-md flex-col gap-2 sm:flex-row"
@@ -182,64 +195,64 @@ onMounted(async () => {
     </section>
 
     <section class="bg-stone-50 dark:bg-stone-950" aria-labelledby="cities-title">
-      <div class="mx-auto max-w-7xl px-5 py-8 md:px-6 md:py-14">
-        <div v-if="citiesLoading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mx-auto max-w-7xl px-5 py-5 md:px-6 md:py-8">
+        <div v-if="citiesLoading" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <div
             v-for="item in 8"
             :key="item"
-            class="h-16 animate-pulse rounded-2xl bg-stone-200"
+            class="h-12 animate-pulse rounded-xl bg-stone-200"
           ></div>
         </div>
         <p v-else-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
-        <div v-else-if="cities.length" class="space-y-10">
+        <div v-else-if="cities.length" class="space-y-6">
           <div>
-            <h2 id="cities-title" class="mb-4 text-xl font-medium">{{ copy.major }}</h2>
+            <h2 id="cities-title" class="mb-3 text-lg font-medium">{{ copy.major }}</h2>
             <div
               v-for="[country, countryCities] in groupedMajorCities"
               :key="`major-${country}`"
-              class="mb-6 last:mb-0"
+              class="mb-4 last:mb-0"
             >
-              <h2 class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500">
+              <h2 class="mb-2 text-xs font-semibold uppercase tracking-[.15em] text-stone-500">
                 {{ country }}
               </h2>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <RouterLink
                   v-for="item in countryCities"
                   :key="`${item.city}-${item.country}`"
                   :to="`/cities/${encodeURIComponent(item.city)}`"
-                  class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
+                  class="city-link touch-target rounded-xl border border-stone-200 bg-white p-3 transition dark:border-stone-800 dark:bg-stone-900"
                 >
-                  <span class="font-medium">{{ item.city }}</span>
+                  <span class="text-sm font-medium">{{ item.city }}</span>
                   <span v-if="item.listings_count" class="mt-1 block text-sm text-stone-500">
                     {{ item.listings_count }} {{ copy.profiles }}
                   </span>
-                  <span v-else class="mt-1 block text-sm text-stone-500">{{ copy.profiles }}</span>
+                  <span v-else class="mt-1 block text-xs text-stone-500">{{ copy.profiles }}</span>
                 </RouterLink>
               </div>
             </div>
           </div>
           <div v-if="otherCities.length">
-            <h2 class="mb-4 text-xl font-medium">{{ copy.withListings }}</h2>
+            <h2 class="mb-3 text-lg font-medium">{{ copy.withListings }}</h2>
             <div
               v-for="[country, countryCities] in groupedOtherCities"
               :key="`other-${country}`"
-              class="mb-6 last:mb-0"
+              class="mb-4 last:mb-0"
             >
-              <h3 class="mb-3 text-xs font-semibold uppercase tracking-[.2em] text-stone-500">
+              <h3 class="mb-2 text-xs font-semibold uppercase tracking-[.15em] text-stone-500">
                 {{ country }}
               </h3>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 <RouterLink
                   v-for="item in countryCities"
                   :key="`${item.city}-${item.country}`"
                   :to="`/cities/${encodeURIComponent(item.city)}`"
-                  class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
+                  class="city-link touch-target rounded-xl border border-stone-200 bg-white p-3 transition dark:border-stone-800 dark:bg-stone-900"
                 >
-                  <span class="font-medium">{{ item.city }}</span>
+                  <span class="text-sm font-medium">{{ item.city }}</span>
                   <span v-if="item.listings_count" class="mt-1 block text-sm text-stone-500">
                     {{ item.listings_count }} {{ copy.profiles }}
                   </span>
-                  <span v-else class="mt-1 block text-sm text-stone-500">{{ copy.profiles }}</span>
+                  <span v-else class="mt-1 block text-xs text-stone-500">{{ copy.profiles }}</span>
                 </RouterLink>
               </div>
             </div>
@@ -248,6 +261,32 @@ onMounted(async () => {
         <p v-else class="rounded-2xl border border-dashed border-stone-300 p-6 text-stone-500">
           {{ copy.empty }}
         </p>
+      </div>
+    </section>
+
+    <section class="border-y border-stone-800 bg-stone-900 text-stone-100">
+      <div
+        class="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:px-6"
+      >
+        <div class="shrink-0">
+          <p class="text-xs font-semibold uppercase tracking-[.15em] text-dusty">
+            {{ copy.ctaEyebrow }}
+          </p>
+          <p class="mt-1 text-lg font-medium">{{ copy.ctaTitle }}</p>
+          <RouterLink
+            to="/register"
+            class="mt-3 inline-flex button-primary h-10 min-h-10 px-4 text-xs"
+          >
+            {{ copy.ctaButton }}
+          </RouterLink>
+        </div>
+        <ul
+          class="grid flex-1 grid-cols-2 gap-x-5 gap-y-2 text-xs text-stone-300 md:grid-cols-4 md:gap-3"
+        >
+          <li v-for="advantage in copy.advantages" :key="advantage" class="flex items-center gap-2">
+            <span class="text-dusty">✓</span>{{ advantage }}
+          </li>
+        </ul>
       </div>
     </section>
   </main>
