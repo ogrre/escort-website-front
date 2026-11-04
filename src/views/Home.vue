@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import ListingCard from '../components/ListingCard.vue';
 import { api } from '../lib/api';
 import { setSeo } from '../lib/seo';
-import ListingCard from '../components/ListingCard.vue';
 import { useListingsStore } from '../stores/listings';
 
 interface City {
@@ -10,22 +11,19 @@ interface City {
   country: string;
   listings_count: number;
 }
-const cities = ref<City[]>([]);
+
+const router = useRouter();
 const listings = useListingsStore();
+const cities = ref<City[]>([]);
 const cityQuery = ref('');
-const isLoading = ref(true);
-const loadError = ref('');
-const filteredCities = computed(() => {
-  const query = cityQuery.value.trim().toLowerCase();
-  return query
-    ? cities.value.filter((item) => item.city.toLowerCase().includes(query))
-    : cities.value;
-});
+const citiesLoading = ref(true);
+const citiesError = ref('');
+
 function submitCitySearch() {
-  if (cityQuery.value.trim()) {
-    window.location.href = `/cities/${encodeURIComponent(cityQuery.value.trim())}`;
-  }
+  const city = cityQuery.value.trim();
+  if (city) router.push(`/cities/${encodeURIComponent(city)}`);
 }
+
 function updateCityStructuredData(items: City[]) {
   const id = 'city-directory-schema';
   let script = document.getElementById(id);
@@ -39,8 +37,8 @@ function updateCityStructuredData(items: City[]) {
   script.textContent = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Escort profiles by city in France',
-    itemListElement: items.slice(0, 50).map((item, index) => ({
+    name: 'Annuaire de profils par ville',
+    itemListElement: items.slice(0, 100).map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       name: item.city,
@@ -48,132 +46,116 @@ function updateCityStructuredData(items: City[]) {
     })),
   });
 }
+
 onMounted(async () => {
   setSeo({
-    title: 'Profils d’escorts par ville en France | Élégance',
-    description:
-      'Trouvez des profils disponibles par ville en France. Choisissez une ville et parcourez les annonces sur Élégance.',
+    title: 'Annuaire de profils par ville | Élégance',
+    description: 'Parcourez les profils disponibles et les villes couvertes par Élégance.',
     canonical: `${window.location.origin}/`,
   });
+
   try {
-    cities.value = (await api.get('/cities')).data.data;
+    const [citiesResponse] = await Promise.all([
+      api.get('/cities'),
+      listings.search({ limit: '12' }),
+    ]);
+    cities.value = citiesResponse.data.data;
     updateCityStructuredData(cities.value);
   } catch {
-    loadError.value = 'We could not load the city directory. Please try again.';
+    citiesError.value = 'Les villes sont momentanément indisponibles.';
   } finally {
-    isLoading.value = false;
+    citiesLoading.value = false;
   }
-  await listings.search({ limit: '6' });
 });
 </script>
 
 <template>
   <main>
-    <section class="hero-glow border-b border-stone-200/80">
-      <div class="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-20">
-        <p class="eyebrow">Explore by location</p>
-        <h1 class="mt-3 max-w-4xl text-4xl font-light leading-tight md:text-6xl">
-          Trouvez un profil dans votre ville.
-        </h1>
-        <p class="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
-          Parcourez des profils disponibles et commencez par une ville.
-        </p>
-        <form
-          class="soft-card mt-8 flex max-w-2xl items-center gap-3 p-2"
-          @submit.prevent="submitCitySearch"
-        >
-          <label for="city-search" class="sr-only">Search by city</label>
-          <span class="pl-3 text-stone-400" aria-hidden="true">⌕</span>
-          <input
-            id="city-search"
-            v-model="cityQuery"
-            class="min-w-0 flex-1 bg-transparent px-1 py-3 outline-none"
-            placeholder="Rechercher une ville"
-            autocomplete="address-level2"
-          />
-          <button
-            class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-dusty-dark"
-          >
-            Rechercher
-          </button>
-        </form>
-        <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-stone-500">
-          <span>18+</span><span>Profils locaux</span><span>Navigation discrète</span>
-        </div>
-      </div>
-    </section>
-    <section
-      v-if="listings.loading || listings.listings.length"
-      class="border-b border-stone-200 bg-white"
-      aria-labelledby="featured-listings-title"
-    >
-      <div class="mx-auto max-w-7xl px-6 py-12 md:py-16">
-        <div class="flex items-end justify-between gap-4">
+    <section class="border-b border-stone-200 bg-white">
+      <div class="mx-auto max-w-7xl px-6 py-8 md:py-10">
+        <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p class="eyebrow">Profils disponibles</p>
-            <h2 id="featured-listings-title" class="mt-2 text-3xl font-light">
-              Découvrez les derniers profils
-            </h2>
+            <p class="eyebrow">Annuaire</p>
+            <h1 class="mt-2 text-3xl font-light md:text-4xl">Profils disponibles</h1>
           </div>
-          <RouterLink to="/search" class="text-sm font-medium text-dusty-dark hover:underline">
-            Tout voir →
-          </RouterLink>
+          <form class="flex w-full max-w-md gap-2" @submit.prevent="submitCitySearch">
+            <label for="city-search" class="sr-only">Rechercher une ville</label>
+            <input
+              id="city-search"
+              v-model="cityQuery"
+              class="min-w-0 flex-1 rounded-full border border-stone-300 bg-stone-50 px-5 py-3 outline-none focus:border-dusty"
+              placeholder="Aller à une ville"
+              autocomplete="address-level2"
+            />
+            <button class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white">
+              Ouvrir
+            </button>
+          </form>
         </div>
-        <div v-if="listings.loading" class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="item in 3"
-            :key="item"
-            class="aspect-[4/5] animate-pulse rounded-3xl bg-stone-100"
-          ></div>
-        </div>
-        <div v-else class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <ListingCard
-            v-for="listing in listings.listings.slice(0, 6)"
-            :key="listing.id"
-            :listing="listing"
-          />
-        </div>
-      </div>
-    </section>
-    <section class="border-b border-zinc-200 bg-white" aria-labelledby="city-directory-title">
-      <div class="mx-auto max-w-7xl px-6 py-14">
-        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p class="eyebrow">City directory</p>
-            <h2 id="city-directory-title" class="mt-2 text-3xl font-light">Choisissez une ville</h2>
-          </div>
-          <RouterLink to="/search" class="text-sm font-medium text-dusty-dark hover:underline">
-            Voir tous les profils →
-          </RouterLink>
-        </div>
-        <div
-          v-if="isLoading"
-          class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-          aria-label="Loading cities"
+        <nav
+          v-if="!citiesLoading && cities.length"
+          class="mt-7 flex gap-2 overflow-x-auto pb-1"
+          aria-label="Villes populaires"
         >
-          <div
-            v-for="index in 8"
-            :key="index"
-            class="h-24 animate-pulse rounded-2xl bg-stone-100"
-          ></div>
-        </div>
-        <p v-else-if="loadError" class="mt-8 rounded-2xl bg-red-50 p-5 text-red-700">
-          {{ loadError }}
-        </p>
-        <div v-else class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <RouterLink
-            v-for="item in filteredCities"
+            v-for="item in cities.slice(0, 8)"
             :key="`${item.city}-${item.country}`"
             :to="`/cities/${encodeURIComponent(item.city)}`"
-            class="soft-card p-5 transition hover:-translate-y-1 hover:border-dusty"
+            class="whitespace-nowrap rounded-full border border-stone-200 px-4 py-2 text-sm text-stone-600 transition hover:border-dusty hover:text-dusty-dark"
           >
-            <span class="text-xl">{{ item.city }}</span
-            ><span class="mt-2 block text-sm text-zinc-500">{{ item.listings_count }} profils</span>
+            {{ item.city }}
+          </RouterLink>
+        </nav>
+      </div>
+    </section>
+
+    <section class="bg-stone-50" aria-labelledby="profiles-title">
+      <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
+        <div v-if="listings.loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="item in 6"
+            :key="item"
+            class="aspect-[4/5] animate-pulse rounded-3xl bg-stone-200"
+          ></div>
+        </div>
+        <p v-else-if="listings.error" class="rounded-2xl bg-red-50 p-5 text-sm text-red-700">
+          {{ listings.error }}
+        </p>
+        <div v-else-if="listings.listings.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ListingCard v-for="listing in listings.listings" :key="listing.id" :listing="listing" />
+        </div>
+        <div
+          v-else
+          class="rounded-3xl border border-dashed border-stone-300 bg-white p-10 text-center"
+        >
+          <h2 id="profiles-title" class="text-2xl font-light">Aucun profil disponible</h2>
+          <p class="mt-3 text-stone-500">Choisissez une ville pour parcourir son annuaire.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-t border-stone-200 bg-white" aria-labelledby="cities-title">
+      <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
+        <h2 id="cities-title" class="text-2xl font-light">Toutes les villes</h2>
+        <p v-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
+        <div v-else-if="citiesLoading" class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            v-for="item in 8"
+            :key="item"
+            class="h-16 animate-pulse rounded-2xl bg-stone-100"
+          ></div>
+        </div>
+        <div v-else class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <RouterLink
+            v-for="item in cities"
+            :key="`${item.city}-${item.country}`"
+            :to="`/cities/${encodeURIComponent(item.city)}`"
+            class="rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-dusty hover:bg-white"
+          >
+            <span class="font-medium">{{ item.city }}</span>
+            <span class="mt-1 block text-sm text-stone-500">{{ item.listings_count }} profils</span>
           </RouterLink>
         </div>
-        <p v-if="!isLoading && !loadError && !filteredCities.length" class="mt-8 text-zinc-500">
-          Les villes apparaîtront dès que des profils seront publiés.
-        </p>
       </div>
     </section>
   </main>
