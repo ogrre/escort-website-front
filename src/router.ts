@@ -4,7 +4,8 @@ import Search from './views/Search.vue';
 import Profile from './views/Profile.vue';
 import Dashboard from './views/Dashboard.vue';
 import Admin from './views/Admin.vue';
-import Auth from './views/Auth.vue';
+import Login from './views/Login.vue';
+import Register from './views/Register.vue';
 import CityLanding from './views/CityLanding.vue';
 import Legal from './views/Legal.vue';
 export const routes = [
@@ -15,8 +16,8 @@ export const routes = [
   { path: '/:city/:id', component: Profile },
   { path: '/dashboard', component: Dashboard },
   { path: '/profile', redirect: '/dashboard' },
-  { path: '/login', component: Auth },
-  { path: '/register', component: Auth },
+  { path: '/login', component: Login },
+  { path: '/register', component: Register },
   { path: '/compte', redirect: '/login' },
   { path: '/admin', component: Admin },
   { path: '/mentions-legales', component: Legal, meta: { legalPage: 'legal' } },
