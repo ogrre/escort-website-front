@@ -5,8 +5,13 @@ defineProps<{ listing: Listing }>();
 </script>
 
 <template>
-  <article class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-    <RouterLink :to="`/${encodeURIComponent(listing.city)}/${listing.id}`" class="block">
+  <article
+    class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800"
+  >
+    <RouterLink
+      :to="`/${encodeURIComponent(listing.city)}/${listing.id}`"
+      class="touch-target block"
+    >
       <div class="relative aspect-[4/5] overflow-hidden bg-stone-100">
         <img
           v-if="listing.photos[0]"
@@ -17,7 +22,7 @@ defineProps<{ listing: Listing }>();
         />
         <span
           v-if="listing.verified"
-          class="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-stone-800"
+          class="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-stone-800 dark:bg-stone-900/95 dark:text-stone-100"
         >
           Vérifié
         </span>
