@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { routes } from '../src/router';
 
-const publicPaths = ['/', '/register', '/login', '/search'];
+const publicPaths = [
+  '/',
+  '/register',
+  '/login',
+  '/search',
+  '/mentions-legales',
+  '/confidentialite',
+  '/cookies',
+  '/cgu',
+];
 
 describe('public route rendering', () => {
   it.each(publicPaths)('resolves %s to a route component', async (path) => {
