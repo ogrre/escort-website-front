@@ -2,25 +2,9 @@
 import { computed, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../lib/api';
+import { normalizeLocations, type ApiLocation, type City } from '../lib/locations';
 import { setSeo } from '../lib/seo';
 import { localeKey, type Locale } from '../lib/locale';
-
-interface City {
-  city: string;
-  country: string;
-  listings_count: number;
-}
-
-interface ApiLocation {
-  city?: string;
-  country?: string | { code?: string; name?: string };
-  country_code?: string;
-  name?: string;
-  slug?: string;
-  is_major?: boolean | number;
-  listings_count?: number;
-  profiles_count?: number;
-}
 
 const router = useRouter();
 const locale = inject(localeKey, ref<Locale>('fr'));
@@ -32,7 +16,7 @@ const copy = computed(() =>
         search: 'Chercher',
         major: 'Villes principales',
         withListings: 'Autres villes avec annonces',
-        profiles: 'profils',
+        profiles: 'annonces disponibles',
         empty: 'Aucune ville disponible pour le moment.',
         searchEmpty: 'Aucune ville trouvée.',
       }
@@ -42,7 +26,7 @@ const copy = computed(() =>
         search: 'Search',
         major: 'Major cities',
         withListings: 'Other cities with listings',
-        profiles: 'profiles',
+        profiles: 'listings available',
         empty: 'No cities are available right now.',
         searchEmpty: 'No city found.',
       },
@@ -72,19 +56,6 @@ const groupedOtherCities = computed(() => {
   });
   return [...groups.entries()];
 });
-
-function normalizeLocations(items: ApiLocation[]): City[] {
-  return items
-    .map((item) => ({
-      city: item.city ?? item.name ?? '',
-      country:
-        typeof item.country === 'string'
-          ? item.country
-          : (item.country?.name ?? item.country_code ?? ''),
-      listings_count: item.listings_count ?? item.profiles_count ?? 0,
-    }))
-    .filter((item) => item.city && item.listings_count > 0);
-}
 
 async function searchLocations() {
   const query = cityQuery.value.trim();
@@ -199,9 +170,10 @@ onMounted(async () => {
               @click="openCity(item.city)"
             >
               <span>{{ item.city }}</span>
-              <span class="text-xs text-stone-500"
-                >{{ item.listings_count }} {{ copy.profiles }}</span
-              >
+              <span v-if="item.listings_count" class="text-xs text-stone-500">
+                {{ item.listings_count }} {{ copy.profiles }}
+              </span>
+              <span v-else class="text-xs text-stone-500">{{ copy.profiles }}</span>
             </button>
           </div>
           <p v-else class="text-sm text-stone-500">{{ copy.searchEmpty }}</p>
@@ -238,9 +210,10 @@ onMounted(async () => {
                   class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
                 >
                   <span class="font-medium">{{ item.city }}</span>
-                  <span class="mt-1 block text-sm text-stone-500"
-                    >{{ item.listings_count }} {{ copy.profiles }}</span
-                  >
+                  <span v-if="item.listings_count" class="mt-1 block text-sm text-stone-500">
+                    {{ item.listings_count }} {{ copy.profiles }}
+                  </span>
+                  <span v-else class="mt-1 block text-sm text-stone-500">{{ copy.profiles }}</span>
                 </RouterLink>
               </div>
             </div>
@@ -263,9 +236,10 @@ onMounted(async () => {
                   class="city-link touch-target rounded-2xl border border-stone-200 bg-white p-4 transition dark:border-stone-800 dark:bg-stone-900"
                 >
                   <span class="font-medium">{{ item.city }}</span>
-                  <span class="mt-1 block text-sm text-stone-500"
-                    >{{ item.listings_count }} {{ copy.profiles }}</span
-                  >
+                  <span v-if="item.listings_count" class="mt-1 block text-sm text-stone-500">
+                    {{ item.listings_count }} {{ copy.profiles }}
+                  </span>
+                  <span v-else class="mt-1 block text-sm text-stone-500">{{ copy.profiles }}</span>
                 </RouterLink>
               </div>
             </div>
