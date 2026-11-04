@@ -6,7 +6,7 @@ defineProps<{ listing: Listing }>();
 
 <template>
   <article class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-    <RouterLink :to="`/${listing.city}/${listing.slug}`" class="block">
+    <RouterLink :to="`/${encodeURIComponent(listing.city)}/${listing.id}`" class="block">
       <div class="relative aspect-[4/5] overflow-hidden bg-stone-100">
         <img
           v-if="listing.photos[0]"

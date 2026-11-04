@@ -12,7 +12,7 @@ export const routes = [
   { path: '/search', component: Search },
   { path: '/recherche', redirect: '/search' },
   { path: '/cities/:city', component: CityLanding },
-  { path: '/:city/:slug', component: Profile },
+  { path: '/:city/:id', component: Profile },
   { path: '/dashboard', component: Dashboard },
   { path: '/profile', redirect: '/dashboard' },
   { path: '/login', component: Auth },

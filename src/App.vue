@@ -7,11 +7,20 @@ import { confirmAge, hasAgeConfirmation } from './lib/age-gate';
 const router = useRouter();
 const mobileMenuOpen = ref(false);
 const ageConfirmed = ref(false);
+const darkMode = ref(false);
 const isAuthenticated = computed(() => Boolean(localStorage.getItem('token')));
 
 onMounted(() => {
   ageConfirmed.value = hasAgeConfirmation(localStorage);
+  darkMode.value = localStorage.getItem('theme') === 'dark';
+  document.documentElement.classList.toggle('dark', darkMode.value);
 });
+
+function toggleTheme() {
+  darkMode.value = !darkMode.value;
+  localStorage.setItem('theme', darkMode.value ? 'dark' : 'light');
+  document.documentElement.classList.toggle('dark', darkMode.value);
+}
 
 function acceptAge() {
   confirmAge(localStorage);
@@ -35,8 +44,12 @@ async function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-stone-50">
-    <header class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur">
+  <div
+    class="min-h-screen bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
+  >
+    <header
+      class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
+    >
       <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <button
@@ -49,13 +62,13 @@ async function logout() {
           <span class="sr-only">Menu</span><span class="block h-0.5 w-5 bg-current"></span
           ><span class="mt-1.5 block h-0.5 w-5 bg-current"></span>
         </button>
+        <button type="button" class="nav-link ml-auto mr-4 lg:ml-0" @click="toggleTheme">
+          {{ darkMode ? 'Mode clair' : 'Mode sombre' }}
+        </button>
         <div
           class="absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0"
           :class="mobileMenuOpen ? 'block' : 'hidden lg:flex'"
         >
-          <RouterLink to="/search" class="nav-link" @click="mobileMenuOpen = false"
-            >Explore</RouterLink
-          >
           <RouterLink
             v-if="isAuthenticated"
             to="/dashboard"
@@ -85,10 +98,10 @@ async function logout() {
       aria-modal="true"
       aria-labelledby="age-gate-title"
     >
-      <section class="max-w-lg rounded-3xl bg-white p-7 shadow-2xl md:p-10">
+      <section class="max-w-lg rounded-3xl bg-white p-7 shadow-2xl dark:bg-stone-900 md:p-10">
         <p class="eyebrow">Accès réservé aux adultes</p>
         <h1 id="age-gate-title" class="mt-3 text-3xl font-light">Avez-vous 18 ans ou plus ?</h1>
-        <p class="mt-5 leading-7 text-stone-600">
+        <p class="mt-5 leading-7 text-stone-600 dark:text-stone-300">
           Vous devez confirmer être majeur(e) avant d’accéder au site. Cette confirmation est
           mémorisée uniquement dans le stockage local de votre navigateur.
         </p>
@@ -117,7 +130,7 @@ async function logout() {
         </nav>
       </section>
     </div>
-    <footer class="border-t border-stone-200 bg-white">
+    <footer class="border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
       <nav
         class="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 px-6 py-6 text-xs text-stone-500"
         aria-label="Legal links"
