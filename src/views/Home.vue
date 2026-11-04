@@ -71,25 +71,26 @@ onMounted(async () => {
 
 <template>
   <main>
-    <section class="border-b border-stone-200 bg-white">
+    <section class="border-b border-stone-200 bg-white dark:border-stone-800">
       <div class="mx-auto max-w-7xl px-6 py-8 md:py-10">
         <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p class="eyebrow">Annuaire</p>
             <h1 class="mt-2 text-3xl font-light md:text-4xl">Profils disponibles</h1>
           </div>
-          <form class="flex w-full max-w-md gap-2" @submit.prevent="submitCitySearch">
+          <form
+            class="flex w-full max-w-md flex-col gap-2 sm:flex-row"
+            @submit.prevent="submitCitySearch"
+          >
             <label for="city-search" class="sr-only">Rechercher une ville</label>
             <input
               id="city-search"
               v-model="cityQuery"
-              class="min-w-0 flex-1 rounded-full border border-stone-300 bg-stone-50 px-5 py-3 outline-none focus:border-dusty"
+              class="min-w-0 flex-1 rounded-full border border-stone-300 bg-stone-50 px-5 py-3 outline-none transition focus:border-dusty focus:ring-2 focus:ring-dusty/30"
               placeholder="Aller à une ville"
               autocomplete="address-level2"
             />
-            <button class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white">
-              Ouvrir
-            </button>
+            <button class="button-primary w-full sm:w-auto">Ouvrir</button>
           </form>
         </div>
         <nav
@@ -101,7 +102,7 @@ onMounted(async () => {
             v-for="item in cities.slice(0, 8)"
             :key="`${item.city}-${item.country}`"
             :to="`/cities/${encodeURIComponent(item.city)}`"
-            class="whitespace-nowrap rounded-full border border-stone-200 px-4 py-2 text-sm text-stone-600 transition hover:border-dusty hover:text-dusty-dark"
+            class="touch-target whitespace-nowrap rounded-full border border-stone-200 px-4 py-3 text-sm text-stone-600 transition hover:border-dusty hover:text-dusty-dark"
           >
             {{ item.city }}
           </RouterLink>
@@ -109,7 +110,7 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="bg-stone-50" aria-labelledby="profiles-title">
+    <section class="bg-stone-50 dark:bg-stone-950" aria-labelledby="profiles-title">
       <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
         <div v-if="listings.loading" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div
@@ -134,7 +135,10 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="border-t border-stone-200 bg-white" aria-labelledby="cities-title">
+    <section
+      class="border-t border-stone-200 bg-white dark:border-stone-800"
+      aria-labelledby="cities-title"
+    >
       <div class="mx-auto max-w-7xl px-6 py-10 md:py-14">
         <h2 id="cities-title" class="text-2xl font-light">Toutes les villes</h2>
         <p v-if="citiesError" class="mt-5 text-sm text-red-700">{{ citiesError }}</p>
@@ -150,7 +154,7 @@ onMounted(async () => {
             v-for="item in cities"
             :key="`${item.city}-${item.country}`"
             :to="`/cities/${encodeURIComponent(item.city)}`"
-            class="rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-dusty hover:bg-white"
+            class="touch-target rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-dusty hover:bg-white"
           >
             <span class="font-medium">{{ item.city }}</span>
             <span class="mt-1 block text-sm text-stone-500">{{ item.listings_count }} profils</span>

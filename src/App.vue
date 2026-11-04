@@ -45,7 +45,7 @@ async function logout() {
 
 <template>
   <div
-    class="min-h-screen bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
+    class="min-h-screen overflow-x-hidden bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
   >
     <header
       class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
@@ -54,7 +54,15 @@ async function logout() {
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <button
           type="button"
-          class="rounded-xl border border-stone-200 p-2 lg:hidden"
+          class="theme-toggle touch-target order-2 lg:order-none"
+          aria-label="Changer de thème"
+          @click="toggleTheme"
+        >
+          {{ darkMode ? 'Clair' : 'Sombre' }}
+        </button>
+        <button
+          type="button"
+          class="touch-target rounded-xl border border-stone-200 p-2 dark:border-stone-700 lg:hidden"
           aria-label="Toggle navigation"
           :aria-expanded="mobileMenuOpen"
           @click="mobileMenuOpen = !mobileMenuOpen"
@@ -62,11 +70,8 @@ async function logout() {
           <span class="sr-only">Menu</span><span class="block h-0.5 w-5 bg-current"></span
           ><span class="mt-1.5 block h-0.5 w-5 bg-current"></span>
         </button>
-        <button type="button" class="nav-link ml-auto mr-4 lg:ml-0" @click="toggleTheme">
-          {{ darkMode ? 'Mode clair' : 'Mode sombre' }}
-        </button>
         <div
-          class="absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0"
+          class="absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 shadow-lg dark:border-stone-800 dark:bg-stone-950 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
           :class="mobileMenuOpen ? 'block' : 'hidden lg:flex'"
         >
           <RouterLink
@@ -82,7 +87,7 @@ async function logout() {
           <RouterLink
             v-if="!isAuthenticated"
             to="/register"
-            class="nav-cta"
+            class="nav-cta touch-target"
             @click="mobileMenuOpen = false"
             >Create account</RouterLink
           >
@@ -106,19 +111,10 @@ async function logout() {
           mémorisée uniquement dans le stockage local de votre navigateur.
         </p>
         <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white"
-            @click="acceptAge"
-          >
+          <button type="button" class="button-primary" @click="acceptAge">
             Oui, j’ai 18 ans ou plus
           </button>
-          <a
-            href="https://www.google.com/"
-            class="rounded-full border border-stone-300 px-5 py-3 text-center text-sm font-medium"
-          >
-            Non, quitter le site
-          </a>
+          <a href="https://www.google.com/" class="button-secondary"> Non, quitter le site </a>
         </div>
         <nav
           class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500"
