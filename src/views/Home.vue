@@ -13,12 +13,13 @@ interface City {
 
 interface ApiLocation {
   city?: string;
-  country?: string;
+  country?: string | { code?: string; name?: string };
   country_code?: string;
   name?: string;
   slug?: string;
-  is_major?: boolean;
+  is_major?: boolean | number;
   listings_count?: number;
+  profiles_count?: number;
 }
 
 const router = useRouter();
@@ -76,10 +77,13 @@ function normalizeLocations(items: ApiLocation[]): City[] {
   return items
     .map((item) => ({
       city: item.city ?? item.name ?? '',
-      country: item.country ?? item.country_code ?? '',
-      listings_count: item.listings_count ?? 0,
+      country:
+        typeof item.country === 'string'
+          ? item.country
+          : (item.country?.name ?? item.country_code ?? ''),
+      listings_count: item.listings_count ?? item.profiles_count ?? 0,
     }))
-    .filter((item) => item.city);
+    .filter((item) => item.city && item.listings_count > 0);
 }
 
 async function searchLocations() {
