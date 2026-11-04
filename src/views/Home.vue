@@ -2,7 +2,7 @@
 import { computed, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../lib/api';
-import { normalizeLocations, type ApiLocation, type City } from '../lib/locations';
+import { locationKey, normalizeLocations, type ApiLocation, type City } from '../lib/locations';
 import { setSeo } from '../lib/seo';
 import { localeKey, type Locale } from '../lib/locale';
 
@@ -119,9 +119,9 @@ onMounted(async () => {
       api.get('/locations', { params: { has_listings: 1 } }),
     ]);
     majorCities.value = normalizeLocations(majorResponse.data.data as ApiLocation[]);
-    const majorKeys = new Set(majorCities.value.map((item) => `${item.city}-${item.country}`));
+    const majorKeys = new Set(majorCities.value.map((item) => locationKey(item)));
     otherCities.value = normalizeLocations(listedResponse.data.data as ApiLocation[]).filter(
-      (item) => !majorKeys.has(`${item.city}-${item.country}`),
+      (item) => !majorKeys.has(locationKey(item)),
     );
     updateCityStructuredData(cities.value);
   } catch {
