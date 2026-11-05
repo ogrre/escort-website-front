@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import { locationKey, normalizeLocations, type ApiLocation, type City } from '../lib/locations';
 import { setSeo } from '../lib/seo';
 import { localeKey, type Locale } from '../lib/locale';
+import { cachedRequest } from '../lib/request-cache';
 import { useListingsStore } from '../stores/listings';
 
 const router = useRouter();
@@ -136,13 +137,22 @@ onMounted(async () => {
 
   try {
     const [majorResponse, listedResponse] = await Promise.all([
-      api.get('/locations', { params: { is_major: 1, has_listings: 1 } }),
-      api.get('/locations', { params: { has_listings: 1 } }),
+      cachedRequest(
+        'locations:major:listings',
+        async () =>
+          (await api.get('/locations', { params: { is_major: 1, has_listings: 1 } })).data.data,
+        300_000,
+      ),
+      cachedRequest(
+        'locations:listed',
+        async () => (await api.get('/locations', { params: { has_listings: 1 } })).data.data,
+        300_000,
+      ),
       listingsStore.search({ sort: 'boosted' }),
     ]);
-    majorCities.value = normalizeLocations(majorResponse.data.data as ApiLocation[]);
+    majorCities.value = normalizeLocations(majorResponse as ApiLocation[]);
     const majorKeys = new Set(majorCities.value.map((item) => locationKey(item)));
-    otherCities.value = normalizeLocations(listedResponse.data.data as ApiLocation[]).filter(
+    otherCities.value = normalizeLocations(listedResponse as ApiLocation[]).filter(
       (item) => !majorKeys.has(locationKey(item)),
     );
     updateCityStructuredData(cities.value);
