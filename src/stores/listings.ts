@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../lib/api';
+import { cachedRequest } from '../lib/request-cache';
 export interface Listing {
   id: string;
   slug: string;
@@ -28,7 +29,12 @@ export const useListingsStore = defineStore('listings', () => {
     loading.value = true;
     error.value = '';
     try {
-      listings.value = (await api.get('/listings', { params })).data.data;
+      const cacheKey = 'listings:' + JSON.stringify(params);
+      listings.value = await cachedRequest(
+        cacheKey,
+        async () => (await api.get('/listings', { params })).data.data,
+        30_000,
+      );
     } catch {
       listings.value = [];
       error.value = 'Listings could not be loaded. Please try again.';
