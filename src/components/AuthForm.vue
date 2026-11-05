@@ -92,6 +92,7 @@ async function submit() {
             maxlength="120"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="name"
+            placeholder="Votre nom ou pseudonyme"
           />
           <span v-if="messageFor('name')" class="mt-1 block text-xs text-red-600">{{
             messageFor('name')
@@ -106,6 +107,7 @@ async function submit() {
             type="email"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="email"
+            placeholder="vous@exemple.fr"
           />
           <span v-if="messageFor('email')" class="mt-1 block text-xs text-red-600">{{
             messageFor('email')
@@ -130,6 +132,7 @@ async function submit() {
             minlength="8"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             :autocomplete="isRegister ? 'new-password' : 'current-password'"
+            placeholder="••••••••"
           />
           <span v-if="messageFor('password')" class="mt-1 block text-xs text-red-600">{{
             messageFor('password')
@@ -145,6 +148,7 @@ async function submit() {
             minlength="8"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="new-password"
+            placeholder="••••••••"
           />
           <span
             v-if="messageFor('password_confirmation')"

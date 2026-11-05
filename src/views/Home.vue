@@ -22,9 +22,9 @@ const loadingCities = ref(true);
 const copy = computed(() =>
   locale.value === 'fr'
     ? {
-        eyebrow: 'Annuaire vérifié',
-        title: 'Trouvez un profil près de chez vous.',
-        intro: 'Sélectionnez une ville ou recherchez directement une annonce.',
+        eyebrow: 'Annuaire France · 18+',
+        title: 'Explorez les profils par ville.',
+        intro: '',
         search: 'Rechercher',
         query: 'Pseudo ou mot-clé',
         city: 'Ville',
@@ -34,26 +34,17 @@ const copy = computed(() =>
         women: 'Filles',
         men: 'Hommes',
         trans: 'Trans / TV',
-        popular: 'Villes principales',
+        popular: 'Les principales villes',
         nearby: 'Autres villes avec annonces',
         profiles: 'profils',
-        listings: 'Annonces récentes',
-        allListings: 'Voir tout',
+        listings: 'Profils à découvrir',
+        allListings: 'Voir toutes les annonces',
         empty: 'Aucune annonce disponible pour le moment.',
-        signupEyebrow: 'Pas encore inscrit ?',
-        signupTitle: 'Accédez à vos favoris et contactez les profils.',
-        signup: 'Créer un compte',
-        advantages: [
-          'Enregistrer vos favoris',
-          'Contacter les profils',
-          'Recevoir des alertes',
-          'Gérer vos annonces',
-        ],
       }
     : {
-        eyebrow: 'Verified directory',
-        title: 'Find a profile near you.',
-        intro: 'Choose a city or search directly through the listings.',
+        eyebrow: 'Directory France · 18+',
+        title: 'Explore profiles by city.',
+        intro: '',
         search: 'Search',
         query: 'Username or keyword',
         city: 'City',
@@ -66,13 +57,9 @@ const copy = computed(() =>
         popular: 'Major cities',
         nearby: 'Other cities with listings',
         profiles: 'profiles',
-        listings: 'Recent listings',
-        allListings: 'View all',
+        listings: 'Profiles to discover',
+        allListings: 'View all listings',
         empty: 'No listing is available right now.',
-        signupEyebrow: 'Not registered yet?',
-        signupTitle: 'Save favourites and contact profiles.',
-        signup: 'Create an account',
-        advantages: ['Save favourites', 'Contact profiles', 'Get alerts', 'Manage listings'],
       },
 );
 const visibleListings = computed(() => store.listings.slice(0, 8));
@@ -133,48 +120,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="v2-page">
-    <section class="v2-hero">
-      <div class="v2-wrap hero-grid">
-        <div>
-          <p class="v2-eyebrow">{{ copy.eyebrow }}</p>
-          <h1>{{ copy.title }}</h1>
-          <p class="v2-lead">{{ copy.intro }}</p>
-        </div>
-        <form class="v2-search-panel" @submit.prevent="submitSearch">
-          <div class="v2-search-row">
-            <label class="v2-field"
-              ><span>{{ copy.query }}</span
-              ><input v-model="query" :placeholder="copy.query" autocomplete="off" /></label
-            ><label class="v2-field"
-              ><span>{{ copy.city }}</span
-              ><select v-model="selectedCity">
-                <option value="">{{ copy.allCities }}</option>
-                <option v-for="city in cityOptions" :key="city.city" :value="city.city">
-                  {{ city.city }}
-                </option>
-              </select></label
-            ><label class="v2-field"
-              ><span>{{ copy.gender }}</span
-              ><select v-model="selectedGender">
-                <option value="">{{ copy.allProfiles }}</option>
-                <option value="female">{{ copy.women }}</option>
-                <option value="male">{{ copy.men }}</option>
-                <option value="trans">{{ copy.trans }}</option>
-              </select></label
-            ><button class="v2-button primary" type="submit">{{ copy.search }}</button>
-          </div>
-        </form>
-      </div>
-    </section>
-    <section class="v2-wrap v2-directory" aria-labelledby="directory-title">
-      <div class="v2-section-heading">
-        <div>
-          <p class="v2-eyebrow">Éclat</p>
-          <h2 id="directory-title">{{ copy.popular }}</h2>
-        </div>
-        <span class="v2-muted">{{ cityOptions.length }} villes disponibles</span>
-      </div>
+  <main class="v2-page v4-home">
+    <section class="v2-wrap v4-home-intro">
+      <p class="v2-eyebrow">{{ copy.eyebrow }}</p>
+      <h1>{{ copy.title }}</h1>
+      <h2>{{ copy.popular }}</h2>
       <div v-if="loadingCities" class="v2-city-grid">
         <span v-for="n in 8" :key="n" class="v2-skeleton"></span>
       </div>
@@ -197,16 +147,29 @@ onMounted(async () => {
         </div>
       </div>
     </section>
-    <section class="v2-banner">
-      <div class="v2-wrap banner-content">
-        <div>
-          <p class="v2-eyebrow">{{ copy.signupEyebrow }}</p>
-          <strong>{{ copy.signupTitle }}</strong
-          ><RouterLink to="/register" class="v2-button primary">{{ copy.signup }}</RouterLink>
-        </div>
-        <ul>
-          <li v-for="advantage in copy.advantages" :key="advantage"><b>✓</b>{{ advantage }}</li>
-        </ul>
+    <section class="v2-search-panel v4-quick-search" aria-labelledby="quick-search-title">
+      <h3 id="quick-search-title">Recherche rapide</h3>
+      <form class="v2-search-row" @submit.prevent="submitSearch">
+        <input v-model="query" :placeholder="copy.query" autocomplete="off" />
+        <select v-model="selectedCity">
+          <option value="">{{ copy.allCities }}</option>
+          <option v-for="city in cityOptions" :key="city.city" :value="city.city">
+            {{ city.city }}
+          </option>
+        </select>
+        <select v-model="selectedGender">
+          <option value="">{{ copy.allProfiles }}</option>
+          <option value="female">{{ copy.women }}</option>
+          <option value="male">{{ copy.men }}</option>
+          <option value="trans">TV / TS</option>
+          <option value="couple">Couple</option>
+        </select>
+        <button class="v2-button primary" type="submit">{{ copy.search }}</button>
+      </form>
+      <div class="v2-filter-chips">
+        <RouterLink to="/search?verified=1" class="v2-chip">✓ Vérifiés</RouterLink>
+        <RouterLink to="/search?video=1" class="v2-chip">▶ Avec vidéo</RouterLink>
+        <RouterLink to="/search" class="v2-chip">Tous les filtres →</RouterLink>
       </div>
     </section>
     <section class="v2-wrap v2-listings" aria-labelledby="listings-title">
@@ -215,13 +178,18 @@ onMounted(async () => {
           <p class="v2-eyebrow">{{ copy.eyebrow }}</p>
           <h2 id="listings-title">{{ copy.listings }}</h2>
         </div>
-        <RouterLink to="/search" class="v2-button ghost">{{ copy.allListings }}</RouterLink>
+        <RouterLink to="/search" class="v2-button">{{ copy.allListings }}</RouterLink>
       </div>
       <div v-if="store.loading" class="v2-listing-grid">
         <span v-for="n in 4" :key="n" class="v2-listing-skeleton"></span>
       </div>
       <div v-else-if="visibleListings.length" class="v2-listing-grid">
-        <ListingCard v-for="listing in visibleListings" :key="listing.id" :listing="listing" />
+        <ListingCard
+          v-for="(listing, index) in visibleListings"
+          :key="listing.id"
+          :listing="listing"
+          :index="index"
+        />
       </div>
       <p v-else class="v2-empty">{{ copy.empty }}</p>
     </section>

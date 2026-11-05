@@ -130,7 +130,12 @@ onMounted(() => {
           <span v-for="n in 6" :key="n" class="v2-listing-skeleton"></span>
         </div>
         <div v-else-if="filtered.length" class="v2-listing-grid">
-          <ListingCard v-for="item in filtered" :key="item.id" :listing="item" />
+          <ListingCard
+            v-for="(item, index) in filtered"
+            :key="item.id"
+            :listing="item"
+            :index="index"
+          />
         </div>
         <p v-else class="v2-empty">Aucun résultat. Essayez d’élargir vos filtres.</p>
       </section>
