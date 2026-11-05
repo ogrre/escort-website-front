@@ -779,24 +779,24 @@ body {
   }
 }
 
-/* V2 is intentionally light-only. */
+/* V2 follows the dark-only visual language of eclat-prototype-v4.html. */
 .v2-app-shell {
-  --v2-bg: #faf9f7;
-  --v2-panel: #ffffff;
-  --v2-border: #e4dce0;
-  --v2-pink: #c96f91;
-  --v2-hot: #a94b70;
-  --v2-muted: #756b71;
+  --v2-bg: #151417;
+  --v2-panel: #211e24;
+  --v2-border: #40343f;
+  --v2-pink: #f1aecb;
+  --v2-hot: #d96a9b;
+  --v2-muted: #aaa0aa;
   background: var(--v2-bg);
-  color: #282228;
+  color: #f8f1f5;
 }
 .v2-header {
-  background: rgb(255 255 255 / 0.96);
+  background: rgb(21 20 23 / 0.96);
   border-bottom: 1px solid var(--v2-border);
-  box-shadow: 0 3px 16px rgb(49 34 43 / 0.05);
+  box-shadow: none;
 }
 .v2-app-shell .brand-mark {
-  color: #8f4869;
+  color: var(--v2-pink);
 }
 .v2-header-actions {
   display: flex;
@@ -814,7 +814,7 @@ body {
   border: 1px solid transparent;
   border-radius: 9px;
   padding: 10px 14px;
-  color: #4d4249;
+  color: #fce9f2;
   font-size: 14px;
   font-weight: 600;
   transition: 0.2s ease;
@@ -837,37 +837,37 @@ body {
   height: 42px;
   border: 1px solid var(--v2-border);
   border-radius: 9px;
-  background: #fff;
+  background: #302831;
 }
 .v2-menu-toggle span {
   display: block;
   width: 19px;
   height: 2px;
   margin: 4px auto;
-  background: #4d4249;
+  background: #fce9f2;
 }
 .v2-app-shell .locale-switcher {
   border-color: var(--v2-border);
 }
 .v2-app-shell .locale-option {
-  color: #756b71;
+  color: var(--v2-muted);
 }
 .v2-app-shell .locale-option-active {
-  background: #4d4249;
+  background: #6b3754;
   color: #fff;
 }
 .v2-app-shell .header-menu {
-  background: #fff;
+  background: #151417;
 }
 .v2-page,
 .v2-profile-page {
   background: var(--v2-bg);
-  color: #282228;
+  color: #f8f1f5;
 }
 .v2-page h1,
 .v2-page h2,
 .v2-page h3 {
-  color: #282228;
+  color: #f8f1f5;
 }
 .v2-lead,
 .v2-muted {
@@ -875,30 +875,30 @@ body {
 }
 .v2-search-panel,
 .v2-panel {
-  background: #fff;
+  background: var(--v2-panel);
   border-color: var(--v2-border);
   box-shadow: 0 12px 35px rgb(49 34 43 / 0.06);
 }
 .v2-field span {
-  color: #756b71;
+  color: #d6c6d0;
 }
 .v2-field input,
 .v2-field select,
 .v2-page select,
 .v2-page input {
-  border-color: #d8cbd1;
-  background: #fff;
-  color: #282228;
+  border-color: #544450;
+  background: #18161b;
+  color: #fff;
 }
 .v2-button {
-  border-color: #d8cbd1;
-  background: #fff;
-  color: #4d4249;
+  border-color: var(--v2-border);
+  background: #302831;
+  color: #fce9f2;
 }
 .v2-button:hover {
   border-color: var(--v2-pink);
-  background: #fff4f7;
-  color: var(--v2-hot);
+  background: #543348;
+  color: var(--v2-pink);
 }
 .v2-button.primary {
   border-color: var(--v2-pink);
@@ -907,13 +907,13 @@ body {
 }
 .v2-city-card {
   border-color: var(--v2-border);
-  background: #fff;
-  color: #282228;
-  box-shadow: 0 2px 8px rgb(49 34 43 / 0.04);
+  background: #252127;
+  color: #f4eaf0;
+  box-shadow: none;
 }
 .v2-city-card:hover {
   border-color: var(--v2-pink);
-  background: #fff4f7;
+  background: #543348;
 }
 .v2-city-card small,
 .v2-listing-body > small {
@@ -922,13 +922,13 @@ body {
 .v2-city-inline a,
 .v2-tags span,
 .v2-chip {
-  border-color: #d9b4c1;
-  background: #fff7f9;
-  color: #8f4869;
+  border-color: #61455a;
+  background: #302631;
+  color: #f4dce7;
 }
 .v2-banner {
   border-color: var(--v2-border);
-  background: #4d4249;
+  background: #211e24;
   color: #fff;
 }
 .v2-banner .v2-eyebrow {
@@ -939,19 +939,19 @@ body {
 }
 .v2-listing-card {
   border-color: var(--v2-border);
-  background: #fff;
-  box-shadow: 0 5px 18px rgb(49 34 43 / 0.06);
+  background: #242027;
+  box-shadow: none;
 }
 .v2-listing-body {
-  color: #282228;
+  color: #f8f1f5;
 }
 .v2-listing-body p {
-  color: #756b71;
+  color: var(--v2-muted);
 }
 .v2-footer {
   border-top: 1px solid var(--v2-border);
-  background: #fff;
-  color: #756b71;
+  background: #151417;
+  color: var(--v2-muted);
 }
 @media (max-width: 700px) {
   .v2-header-actions {
@@ -962,7 +962,7 @@ body {
     align-items: stretch;
     border: 1px solid var(--v2-border);
     border-radius: 10px;
-    background: #fff;
+    background: #151417;
     padding: 10px;
     box-shadow: 0 10px 30px rgb(49 34 43 / 0.14);
   }
