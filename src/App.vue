@@ -4,11 +4,16 @@ import { useRouter } from 'vue-router';
 import { api } from './lib/api';
 import { confirmAge, hasAgeConfirmation } from './lib/age-gate';
 import { getInitialLocale, localeKey, localeNames, type Locale } from './lib/locale';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { api } from './lib/api';
+import { confirmAge, hasAgeConfirmation } from './lib/age-gate';
 
 const router = useRouter();
 const mobileMenuOpen = ref(false);
 const ageConfirmed = ref(false);
 const darkMode = ref(false);
+
 const locale = ref<Locale>(getInitialLocale());
 const isAuthenticated = computed(() => Boolean(localStorage.getItem('token')));
 const copy = computed(() =>
@@ -74,6 +79,23 @@ function acceptAge() {
   ageConfirmed.value = true;
 }
 
+onMounted(() => {
+  ageConfirmed.value = hasAgeConfirmation(localStorage);
+  darkMode.value = localStorage.getItem('theme') === 'dark';
+  document.documentElement.classList.toggle('dark', darkMode.value);
+});
+
+function toggleTheme() {
+  darkMode.value = !darkMode.value;
+  localStorage.setItem('theme', darkMode.value ? 'dark' : 'light');
+  document.documentElement.classList.toggle('dark', darkMode.value);
+}
+
+function acceptAge() {
+  confirmAge(localStorage);
+  ageConfirmed.value = true;
+}
+
 async function logout() {
   try {
     await api.post(
@@ -92,12 +114,11 @@ async function logout() {
 
 <template>
   <div
-    class="app-shell flex min-h-screen flex-col overflow-x-hidden bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
-  >
+
     <header
       class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
     >
-      <nav class="mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
+main
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <button
           type="button"
@@ -144,6 +165,9 @@ async function logout() {
           <span class="sr-only">Menu</span><span class="block h-0.5 w-5 bg-current"></span
           ><span class="mt-1.5 block h-0.5 w-5 bg-current"></span>
         </button>
+        <button type="button" class="nav-link ml-auto mr-4 lg:ml-0" @click="toggleTheme">
+          {{ darkMode ? 'Mode clair' : 'Mode sombre' }}
+        </button>
         <div
           class="header-menu absolute inset-x-0 top-full border-b border-stone-200 bg-stone-50 px-5 py-4 shadow-lg dark:border-stone-800 dark:bg-stone-950 lg:static lg:flex lg:items-center lg:gap-7 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
           :class="mobileMenuOpen ? 'block' : 'hidden lg:flex'"
@@ -182,6 +206,7 @@ async function logout() {
       aria-labelledby="age-gate-title"
     >
       <section class="max-w-lg rounded-3xl bg-white p-7 shadow-2xl dark:bg-stone-900 md:p-10">
+
         <p class="eyebrow">{{ copy.ageEyebrow }}</p>
         <h1 id="age-gate-title" class="mt-3 text-3xl font-light">{{ copy.ageTitle }}</h1>
         <p class="mt-5 leading-7 text-stone-600 dark:text-stone-300">
@@ -193,11 +218,32 @@ async function logout() {
             Oui, j’ai 18 ans ou plus
           </button>
           <a href="https://www.google.com/" class="button-secondary"> {{ copy.leave }} </a>
+        <p class="eyebrow">Accès réservé aux adultes</p>
+        <h1 id="age-gate-title" class="mt-3 text-3xl font-light">Avez-vous 18 ans ou plus ?</h1>
+        <p class="mt-5 leading-7 text-stone-600 dark:text-stone-300">
+          Vous devez confirmer être majeur(e) avant d’accéder au site. Cette confirmation est
+          mémorisée uniquement dans le stockage local de votre navigateur.
+        </p>
+        <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white"
+            @click="acceptAge"
+          >
+            Oui, j’ai 18 ans ou plus
+          </button>
+          <a
+            href="https://www.google.com/"
+            class="rounded-full border border-stone-300 px-5 py-3 text-center text-sm font-medium"
+          >
+            Non, quitter le site
+          </a>
         </div>
         <nav
           class="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500"
           aria-label="Legal information"
         >
+
           <RouterLink to="/mentions-legales">{{ copy.legal }}</RouterLink>
           <RouterLink to="/confidentialite">{{ copy.privacy }}</RouterLink>
           <RouterLink to="/cookies">{{ copy.cookies }}</RouterLink>
@@ -207,14 +253,19 @@ async function logout() {
     <footer
       class="mt-auto border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
     >
+
+          <RouterLink to="/mentions-legales">Mentions légales</RouterLink>
+          <RouterLink to="/confidentialite">Confidentialité</RouterLink>
+          <RouterLink to="/cookies">Cookies</RouterLink>
+        </nav>
+      </section>
+    </div>
+    <footer class="border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+
       <nav
         class="mx-auto flex max-w-7xl flex-wrap gap-x-5 gap-y-2 px-6 py-6 text-xs text-stone-500"
         aria-label="Legal links"
       >
-        <RouterLink to="/mentions-legales">{{ copy.legal }}</RouterLink>
-        <RouterLink to="/confidentialite">{{ copy.privacy }}</RouterLink>
-        <RouterLink to="/cookies">{{ copy.cookies }}</RouterLink>
-        <RouterLink to="/cgu">{{ copy.terms }}</RouterLink>
       </nav>
     </footer>
   </div>
