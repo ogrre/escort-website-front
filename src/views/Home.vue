@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import ListingCard from '../components/ListingCard.vue';
 import { api } from '../lib/api';
 import { locationKey, normalizeLocations, type ApiLocation, type City } from '../lib/locations';
 import { setSeo } from '../lib/seo';
 import { localeKey, type Locale } from '../lib/locale';
+import { useListingsStore } from '../stores/listings';
 
 const router = useRouter();
+const listingsStore = useListingsStore();
 const locale = inject(localeKey, ref<Locale>('fr'));
 const copy = computed(() =>
   locale.value === 'fr'
@@ -26,6 +29,8 @@ const copy = computed(() =>
           'Recevoir des alertes',
           'Gérer vos annonces',
         ],
+        listingsTitle: 'Profils disponibles',
+        listingsEmpty: 'Aucun profil publié pour le moment.',
         empty: 'Aucune ville disponible pour le moment.',
         searchEmpty: 'Aucune ville trouvée.',
       }
@@ -40,6 +45,8 @@ const copy = computed(() =>
         ctaTitle: 'Create your account',
         ctaButton: 'Create an account',
         advantages: ['Save favourites', 'Contact profiles', 'Get alerts', 'Manage your listings'],
+        listingsTitle: 'Available profiles',
+        listingsEmpty: 'No published profile is available yet.',
         empty: 'No cities are available right now.',
         searchEmpty: 'No city found.',
       },
@@ -52,6 +59,7 @@ const citiesError = ref('');
 const searchResults = ref<City[]>([]);
 const searchLoading = ref(false);
 const searched = ref(false);
+const listings = computed(() => listingsStore.listings.slice(0, 8));
 const cities = computed(() => [...majorCities.value, ...otherCities.value]);
 const groupedMajorCities = computed(() => {
   const groups = new Map<string, City[]>();
@@ -130,6 +138,7 @@ onMounted(async () => {
     const [majorResponse, listedResponse] = await Promise.all([
       api.get('/locations', { params: { is_major: 1, has_listings: 1 } }),
       api.get('/locations', { params: { has_listings: 1 } }),
+      listingsStore.search({ sort: 'boosted' }),
     ]);
     majorCities.value = normalizeLocations(majorResponse.data.data as ApiLocation[]);
     const majorKeys = new Set(majorCities.value.map((item) => locationKey(item)));
@@ -287,6 +296,34 @@ onMounted(async () => {
             <span class="text-dusty">✓</span>{{ advantage }}
           </li>
         </ul>
+      </div>
+    </section>
+
+    <section class="bg-stone-50 dark:bg-stone-950" aria-labelledby="listings-title">
+      <div class="mx-auto max-w-7xl px-5 py-6 md:px-6 md:py-9">
+        <div class="flex items-end justify-between gap-4">
+          <div>
+            <p class="eyebrow">Élégance</p>
+            <h2 id="listings-title" class="mt-1 text-xl font-medium">{{ copy.listingsTitle }}</h2>
+          </div>
+          <RouterLink to="/search" class="nav-link shrink-0 text-xs">Voir tout</RouterLink>
+        </div>
+        <div v-if="listingsStore.loading" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            v-for="item in 4"
+            :key="item"
+            class="aspect-[4/5] animate-pulse rounded-2xl bg-stone-200 dark:bg-stone-800"
+          ></div>
+        </div>
+        <div v-else-if="listings.length" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ListingCard v-for="listing in listings" :key="listing.id" :listing="listing" />
+        </div>
+        <p
+          v-else
+          class="mt-4 rounded-xl border border-dashed border-stone-300 p-5 text-sm text-stone-500"
+        >
+          {{ copy.listingsEmpty }}
+        </p>
       </div>
     </section>
   </main>
