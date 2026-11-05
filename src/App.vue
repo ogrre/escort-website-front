@@ -92,13 +92,11 @@ async function logout() {
 
 <template>
   <div
-    class="app-shell flex min-h-screen flex-col overflow-x-hidden bg-stone-50 text-stone-900 transition-colors dark:bg-stone-950 dark:text-stone-100"
+    class="app-shell v2-app-shell flex min-h-screen flex-col overflow-x-hidden transition-colors"
   >
-    <header
-      class="sticky top-0 z-40 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur dark:border-stone-800 dark:bg-stone-950/95"
-    >
-      <nav class="mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
-        <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
+    <header class="sticky top-0 z-40 v2-header backdrop-blur">
+      <nav class="v2-nav mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
+        <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉCLAT</RouterLink>
         <button
           type="button"
           class="theme-toggle touch-target"

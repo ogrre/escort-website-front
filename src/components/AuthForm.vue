@@ -66,18 +66,16 @@ async function submit() {
 </script>
 
 <template>
-  <main
-    class="mx-auto grid min-h-[calc(100vh-80px)] max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2"
-  >
+  <main class="v2-wrap v2-auth-page">
     <div>
-      <p class="mb-4 uppercase tracking-[.35em] text-dusty-dark">Espace privé</p>
-      <h1 class="max-w-lg text-5xl font-light leading-tight">{{ title }}</h1>
-      <p class="mt-6 max-w-md text-zinc-600">
+      <p class="v2-eyebrow">Espace privé</p>
+      <h1>{{ title }}</h1>
+      <p class="v2-lead">
         Enregistrez vos préférences et profitez d’une expérience discrète et personnalisée.
       </p>
     </div>
 
-    <section class="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm md:p-10">
+    <section class="v2-search-panel">
       <form class="space-y-5" @submit.prevent="submit">
         <p v-if="notice" class="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
           {{ notice }}
@@ -154,11 +152,7 @@ async function submit() {
         </label>
 
         <p v-if="error" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
-        <button
-          type="submit"
-          :disabled="loading"
-          class="button-primary w-full rounded-full focus:outline-none focus:ring-2 focus:ring-dusty focus:ring-offset-2 focus:ring-offset-stone-50"
-        >
+        <button type="submit" :disabled="loading" class="v2-button primary wide">
           {{ loading ? 'Chargement…' : isRegister ? 'Créer mon compte' : 'Se connecter' }}
         </button>
       </form>
