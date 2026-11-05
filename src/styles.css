@@ -630,6 +630,131 @@ body {
 .v2-auth-page .text-red-600 {
   color: #f1aecb;
 }
+.v2-role-summary {
+  margin: 0 0 18px;
+  border: 1px solid var(--v2-border);
+  border-radius: 9px;
+  background: #302530;
+  color: #f1aecb;
+  padding: 11px 12px;
+  font-size: 12px;
+}
+.v2-role-summary a {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  text-decoration: underline;
+}
+.v2-signup-page {
+  max-width: 1100px;
+}
+.v2-signup-head {
+  max-width: 660px;
+  margin: 25px 0 28px;
+}
+.v2-signup-head h1 {
+  margin-bottom: 12px;
+}
+.v2-signup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.v2-signup-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid var(--v2-border);
+  border-radius: 14px;
+  background: var(--v2-panel);
+  padding: 18px;
+}
+.v2-signup-card.advertiser {
+  border-color: #80506a;
+}
+.v2-signup-row {
+  display: flex;
+  min-width: 0;
+  gap: 14px;
+}
+.v2-signup-body {
+  min-width: 0;
+  flex: 1;
+}
+.v2-signup-body h2 {
+  margin: 12px 0 8px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.v2-signup-body p {
+  color: var(--v2-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.v2-signup-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #402b3a;
+  color: var(--v2-pink);
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.v2-signup-body ul {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  color: #e8dce3;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.v2-signup-body li:first-letter {
+  color: var(--v2-pink);
+}
+.v2-signup-note {
+  min-height: 38px;
+  border-top: 1px solid var(--v2-border);
+  padding-top: 12px;
+}
+.v2-signup-note strong {
+  color: #fff;
+}
+.v2-signup-portrait {
+  width: 104px;
+  flex: 0 0 104px;
+  align-self: flex-start;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background-position: center;
+  background-size: cover;
+  filter: saturate(0.8);
+}
+.advertiser-portrait {
+  background: linear-gradient(145deg, #6f3656, #241b25 60%, #d96a9b);
+}
+.visitor-portrait {
+  background: linear-gradient(145deg, #39455b, #211d27 60%, #a9869d);
+}
+.v2-signup-cta {
+  width: 100%;
+  margin-top: 18px;
+  text-align: center;
+}
+.v2-signup-card .v2-signup-cta.ghost {
+  border-color: #6d5263;
+  background: transparent;
+  color: #f1aecb;
+}
+.v2-signup-foot {
+  margin: 24px 0 0;
+  color: var(--v2-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.v2-signup-foot a {
+  color: var(--v2-pink);
+  text-decoration: underline;
+}
 .v2-layout {
   display: grid;
   grid-template-columns: 255px minmax(0, 1fr);
@@ -770,6 +895,16 @@ body {
   }
   .v2-auth-page > div {
     margin-bottom: 28px;
+  }
+  .v2-signup-grid {
+    grid-template-columns: 1fr;
+  }
+  .v2-signup-row {
+    align-items: flex-start;
+  }
+  .v2-signup-portrait {
+    width: 78px;
+    flex-basis: 78px;
   }
   .v2-layout {
     display: block;

@@ -20,11 +20,15 @@ const form = reactive({
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'visitor',
+  role: route.query.role === 'advertiser' ? 'advertiser' : 'visitor',
 });
 
 const isRegister = computed(() => props.mode === 'register');
-const title = computed(() => (isRegister.value ? 'Créer votre compte' : 'Se connecter'));
+const isAdvertiser = computed(() => form.role === 'advertiser');
+const title = computed(() => {
+  if (!isRegister.value) return 'Se connecter';
+  return isAdvertiser.value ? 'Créer votre compte annonceur' : 'Créer votre compte visiteur';
+});
 
 function messageFor(field: string) {
   return errors.value[field]?.[0] ?? '';
@@ -108,16 +112,14 @@ async function submit() {
           }}</span>
         </label>
 
-        <label v-if="isRegister" class="block text-sm font-medium">
-          Je souhaite créer un compte
-          <select
-            v-model="form.role"
-            class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-          >
-            <option value="visitor">Visiteur</option>
-            <option value="advertiser">Annonceur / modèle</option>
-          </select>
-        </label>
+        <p v-if="isRegister" class="v2-role-summary">
+          {{
+            isAdvertiser
+              ? 'Compte annonceur · publication de profils'
+              : 'Compte visiteur · favoris, recherche et échanges'
+          }}
+          <RouterLink to="/register">Changer de type de compte</RouterLink>
+        </p>
 
         <label class="block text-sm font-medium">
           Mot de passe
@@ -153,7 +155,15 @@ async function submit() {
 
         <p v-if="error" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
         <button type="submit" :disabled="loading" class="v2-button primary wide">
-          {{ loading ? 'Chargement…' : isRegister ? 'Créer mon compte' : 'Se connecter' }}
+          {{
+            loading
+              ? 'Chargement…'
+              : isRegister
+                ? isAdvertiser
+                  ? 'S’inscrire comme annonceur'
+                  : 'S’inscrire comme membre'
+                : 'Se connecter'
+          }}
         </button>
       </form>
     </section>

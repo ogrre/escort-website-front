@@ -18,9 +18,6 @@ const selectedGender = ref('');
 const majorCities = ref<City[]>([]);
 const otherCities = ref<City[]>([]);
 const loadingCities = ref(true);
-const loadingSearch = ref(false);
-const searchResults = ref<City[]>([]);
-const searched = ref(false);
 
 const copy = computed(() =>
   locale.value === 'fr'
@@ -29,6 +26,7 @@ const copy = computed(() =>
         title: 'Trouvez un profil près de chez vous.',
         intro: 'Sélectionnez une ville ou recherchez directement une annonce.',
         search: 'Rechercher',
+        query: 'Pseudo ou mot-clé',
         city: 'Ville',
         gender: 'Profil',
         allCities: 'Toutes les villes',
@@ -57,6 +55,7 @@ const copy = computed(() =>
         title: 'Find a profile near you.',
         intro: 'Choose a city or search directly through the listings.',
         search: 'Search',
+        query: 'Username or keyword',
         city: 'City',
         gender: 'Profile',
         allCities: 'All cities',
@@ -87,28 +86,6 @@ function submitSearch() {
   if (selectedCity.value) params.set('city', selectedCity.value);
   if (selectedGender.value) params.set('gender', selectedGender.value);
   router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
-}
-async function searchCities() {
-  const value = query.value.trim();
-  if (!value) {
-    searched.value = false;
-    searchResults.value = [];
-    return;
-  }
-  searched.value = true;
-  loadingSearch.value = true;
-  try {
-    const response = await api.get('/locations', { params: { search: value, has_listings: 1 } });
-    searchResults.value = normalizeLocations(response.data.data as ApiLocation[]).slice(0, 6);
-  } finally {
-    loadingSearch.value = false;
-  }
-}
-function chooseCity(city: City) {
-  selectedCity.value = city.city;
-  query.value = '';
-  searched.value = false;
-  router.push(cityPath(city));
 }
 onMounted(async () => {
   setSeo({
@@ -166,13 +143,17 @@ onMounted(async () => {
         </div>
         <form class="v2-search-panel" @submit.prevent="submitSearch">
           <div class="v2-search-row">
-            <label class="v2-field wide"
+            <label class="v2-field"
+              ><span>{{ copy.query }}</span
+              ><input v-model="query" :placeholder="copy.query" autocomplete="off" /></label
+            ><label class="v2-field"
               ><span>{{ copy.city }}</span
-              ><input
-                v-model="query"
-                :placeholder="copy.allCities"
-                autocomplete="address-level2"
-                @input="searchCities" /></label
+              ><select v-model="selectedCity">
+                <option value="">{{ copy.allCities }}</option>
+                <option v-for="city in cityOptions" :key="city.city" :value="city.city">
+                  {{ city.city }}
+                </option>
+              </select></label
             ><label class="v2-field"
               ><span>{{ copy.gender }}</span
               ><select v-model="selectedGender">
@@ -182,21 +163,6 @@ onMounted(async () => {
                 <option value="trans">{{ copy.trans }}</option>
               </select></label
             ><button class="v2-button primary" type="submit">{{ copy.search }}</button>
-          </div>
-          <div v-if="searched" class="v2-search-results">
-            <span v-if="loadingSearch" class="v2-muted">Chargement…</span
-            ><template v-else
-              ><button
-                v-for="city in searchResults"
-                :key="city.city"
-                type="button"
-                @click="chooseCity(city)"
-              >
-                {{ city.city }} <small>{{ city.listings_count }} {{ copy.profiles }}</small></button
-              ><span v-if="!searchResults.length" class="v2-muted"
-                >Aucune ville trouvée.</span
-              ></template
-            >
           </div>
         </form>
       </div>

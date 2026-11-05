@@ -71,11 +71,11 @@ onMounted(() => {
         </div>
         <label class="v2-field"
           ><span>Pseudo / présentation</span
-          ><input v-model="query" placeholder="Rechercher…" @keyup.enter="submit"
+          ><input v-model="query" placeholder="Pseudo ou mot-clé" @keyup.enter="submit"
         /></label>
         <label class="v2-field"
           ><span>Ville</span
-          ><input v-model="city" placeholder="Toutes les villes" @keyup.enter="submit"
+          ><input v-model="city" placeholder="Rechercher une ville" @keyup.enter="submit"
         /></label>
         <label class="v2-field"
           ><span>Genre</span
@@ -97,9 +97,9 @@ onMounted(() => {
       <section>
         <div class="v2-search-panel v2-top-search">
           <form class="v2-search-row" @submit.prevent="submit">
-            <input v-model="query" placeholder="Pseudo, mot-clé…" /><input
+            <input v-model="query" placeholder="Pseudo ou mot-clé" /><input
               v-model="city"
-              placeholder="Ville"
+              placeholder="Rechercher une ville"
             /><button class="v2-button primary" type="submit">Chercher</button>
           </form>
           <div class="v2-filter-chips">
