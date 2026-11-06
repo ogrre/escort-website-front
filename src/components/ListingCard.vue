@@ -5,7 +5,10 @@ defineProps<{ listing: Listing; index?: number }>();
 
 <template>
   <article class="v2-listing-card">
-    <RouterLink :to="`/${encodeURIComponent(listing.city)}/${listing.id}`" class="v2-listing-link">
+    <RouterLink
+      :to="`/${encodeURIComponent(listing.city)}/${encodeURIComponent(listing.slug)}`"
+      class="v2-listing-link"
+    >
       <div class="v2-listing-visual" :class="`alt${(index ?? 0) % 4}`">
         <img
           v-if="listing.photos[0]"
