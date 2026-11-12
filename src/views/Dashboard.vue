@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { api } from '../lib/api';
+import ListingPhotoManager, { type ListingPhoto } from '../components/ListingPhotoManager.vue';
 
 const message = ref('');
 const ageConfirmed = ref(
@@ -9,7 +10,8 @@ const ageConfirmed = ref(
   ),
 );
 const confirmingAge = ref(false);
-const listingId = ref<number | null>(null);
+const listingId = ref<string | null>(null);
+const photos = ref<ListingPhoto[]>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
 const form = reactive({
@@ -42,6 +44,7 @@ async function save() {
   } else {
     const response = await api.post('/listings', { ...form }, { headers: headers() });
     listingId.value = response.data.data.id;
+    photos.value = (response.data.data.photos ?? []) as ListingPhoto[];
     message.value = 'Profile created as a draft.';
   }
 }
@@ -95,7 +98,9 @@ onMounted(async () => {
     if (data) {
       listingId.value = data.id;
       Object.assign(form, data);
+      photos.value = (data.photos ?? []) as ListingPhoto[];
     }
+
     for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
   } catch {
     message.value = 'Connectez-vous pour gérer vos annonces.';
@@ -104,7 +109,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="mx-auto max-w-4xl px-6 py-14">
+  <section class="dashboard-page mx-auto max-w-4xl px-6 py-14">
     <p class="eyebrow">Advertiser space</p>
     <h1 class="mt-3 text-4xl font-light md:text-5xl">Create your profile</h1>
     <p class="mt-4 max-w-2xl text-stone-600">
@@ -253,5 +258,12 @@ onMounted(async () => {
         Publier l’annonce
       </button>
     </form>
+    <ListingPhotoManager
+      v-if="listingId"
+      v-model:photos="photos"
+      :listing-uuid="listingId"
+      class="mt-8"
+      @message="message = $event"
+    />
   </section>
 </template>

@@ -149,6 +149,22 @@ body {
 .legal-warning {
   @apply rounded-2xl bg-amber-50 p-4 text-sm text-amber-900;
 }
+.dashboard-page input,
+.dashboard-page textarea,
+.dashboard-page select {
+  color: #281620;
+}
+.dashboard-page input::placeholder,
+.dashboard-page textarea::placeholder,
+.dashboard-page select::placeholder {
+  color: #57404c;
+  opacity: 1;
+}
+.dashboard-page input:disabled,
+.dashboard-page textarea:disabled,
+.dashboard-page select:disabled {
+  color: #6b5a63;
+}
 .dark .bg-white {
   background-color: rgb(28 25 23) !important;
 }
