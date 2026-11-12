@@ -152,20 +152,21 @@ body {
 .dashboard-page input,
 .dashboard-page textarea,
 .dashboard-page select {
-  color: #1c1218;
-  font-weight: 500;
+  border-color: #544450;
+  background: #18161b;
+  color: #fff;
+  font-weight: 400;
 }
 .dashboard-page input::placeholder,
 .dashboard-page textarea::placeholder,
 .dashboard-page select::placeholder {
-  color: #3f2934;
+  color: #c8b9c2;
   opacity: 1;
-  font-weight: 500;
 }
 .dashboard-page input:disabled,
 .dashboard-page textarea:disabled,
 .dashboard-page select:disabled {
-  color: #4a3540;
+  color: #aaa0aa;
 }
 .dark .bg-white {
   background-color: rgb(28 25 23) !important;
