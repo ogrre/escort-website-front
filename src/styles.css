@@ -149,6 +149,40 @@ body {
 .legal-warning {
   @apply rounded-2xl bg-amber-50 p-4 text-sm text-amber-900;
 }
+.dashboard-page input,
+.dashboard-page textarea,
+.dashboard-page select {
+  border-color: #544450;
+  background: #18161b;
+  color: #fff;
+  font-weight: 400;
+}
+.dashboard-page input::placeholder,
+.dashboard-page textarea::placeholder,
+.dashboard-page select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
+.dashboard-page input:disabled,
+.dashboard-page textarea:disabled,
+.dashboard-page select:disabled {
+  color: #aaa0aa;
+}
+.v2-app-shell input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.v2-app-shell textarea,
+.v2-app-shell select {
+  border: 1px solid #544450;
+  border-radius: 8px;
+  background: #18161b;
+  color: #fff;
+  padding: 11px;
+}
+.v2-app-shell input:not([type='checkbox']):not([type='radio']):not([type='file'])::placeholder,
+.v2-app-shell textarea::placeholder,
+.v2-app-shell select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
 .dark .bg-white {
   background-color: rgb(28 25 23) !important;
 }
@@ -346,6 +380,8 @@ body {
 }
 .v2-field input,
 .v2-field select,
+.v2-search-row input,
+.v2-search-row select,
 .v2-page select,
 .v2-page input {
   width: 100%;
@@ -355,6 +391,11 @@ body {
   background: #18161b;
   color: #fff;
   padding: 11px;
+}
+.v2-search-row input::placeholder,
+.v2-search-row select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
 }
 .v2-button {
   display: inline-flex;

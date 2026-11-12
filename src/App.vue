@@ -13,7 +13,7 @@ const isAuthenticated = computed(() => Boolean(localStorage.getItem('token')));
 const copy = computed(() =>
   locale.value === 'fr'
     ? {
-        post: 'Mon annonce',
+        post: 'Poster une annonce',
         login: 'Se connecter',
         logout: 'Se déconnecter',
         dashboard: 'Mon annonce',
@@ -25,9 +25,11 @@ const copy = computed(() =>
         ageTitle: 'Avez-vous 18 ans ou plus ?',
         ageText: 'Vous devez confirmer être majeur(e) avant d’accéder au site.',
         leave: 'Non, quitter le site',
+        ageStorage:
+          'Cette confirmation est mémorisée uniquement dans le stockage local de votre navigateur.',
       }
     : {
-        post: 'My listing',
+        post: 'Post an ad',
         login: 'Log in',
         logout: 'Log out',
         dashboard: 'My listing',
@@ -39,6 +41,7 @@ const copy = computed(() =>
         ageTitle: 'Are you 18 or older?',
         ageText: 'You must confirm that you are an adult before entering the site.',
         leave: 'No, leave the site',
+        ageStorage: 'This confirmation is stored only in your browser’s local storage.',
       },
 );
 provide(localeKey, locale);
@@ -76,7 +79,7 @@ async function logout() {
   <div class="app-shell v2-app-shell flex min-h-screen flex-col overflow-x-hidden">
     <header class="sticky top-0 z-40 v2-header">
       <nav class="v2-nav mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
-        <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉCLAT</RouterLink>
+        <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <div class="v2-header-actions" :class="{ open: mobileMenuOpen }">
           <RouterLink to="/search" class="v2-header-link" @click="mobileMenuOpen = false"
             >Annonces</RouterLink
@@ -137,10 +140,7 @@ async function logout() {
       <section class="max-w-lg rounded-3xl bg-white p-7 shadow-2xl md:p-10">
         <p class="eyebrow">{{ copy.ageEyebrow }}</p>
         <h1 id="age-gate-title" class="mt-3 text-3xl font-light">{{ copy.ageTitle }}</h1>
-        <p class="mt-5 leading-7 text-stone-600">
-          {{ copy.ageText }} Cette confirmation est mémorisée uniquement dans le stockage local de
-          votre navigateur.
-        </p>
+        <p class="mt-5 leading-7 text-stone-600">{{ copy.ageText }} {{ copy.ageStorage }}</p>
         <div class="mt-7 flex flex-col gap-3 sm:flex-row">
           <button type="button" class="button-primary" @click="acceptAge">
             Oui, j’ai 18 ans ou plus</button

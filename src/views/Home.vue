@@ -76,7 +76,7 @@ function submitSearch() {
 }
 onMounted(async () => {
   setSeo({
-    title: 'Éclat — Profils vérifiés près de chez vous',
+    title: 'Élégance — Profils vérifiés près de chez vous',
     description: 'Trouvez rapidement des profils et annonces disponibles dans votre ville.',
     canonical: `${window.location.origin}/`,
   });
