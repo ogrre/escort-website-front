@@ -20,11 +20,15 @@ const form = reactive({
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'visitor',
+  role: route.query.role === 'advertiser' ? 'advertiser' : 'visitor',
 });
 
 const isRegister = computed(() => props.mode === 'register');
-const title = computed(() => (isRegister.value ? 'Créer votre compte' : 'Se connecter'));
+const isAdvertiser = computed(() => form.role === 'advertiser');
+const title = computed(() => {
+  if (!isRegister.value) return 'Se connecter';
+  return isAdvertiser.value ? 'Créer votre compte annonceur' : 'Créer votre compte visiteur';
+});
 
 function messageFor(field: string) {
   return errors.value[field]?.[0] ?? '';
@@ -66,18 +70,16 @@ async function submit() {
 </script>
 
 <template>
-  <main
-    class="mx-auto grid min-h-[calc(100vh-80px)] max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-2"
-  >
+  <main class="v2-wrap v2-auth-page">
     <div>
-      <p class="mb-4 uppercase tracking-[.35em] text-dusty-dark">Espace privé</p>
-      <h1 class="max-w-lg text-5xl font-light leading-tight">{{ title }}</h1>
-      <p class="mt-6 max-w-md text-zinc-600">
+      <p class="v2-eyebrow">Espace privé</p>
+      <h1>{{ title }}</h1>
+      <p class="v2-lead">
         Enregistrez vos préférences et profitez d’une expérience discrète et personnalisée.
       </p>
     </div>
 
-    <section class="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm md:p-10">
+    <section class="v2-search-panel">
       <form class="space-y-5" @submit.prevent="submit">
         <p v-if="notice" class="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
           {{ notice }}
@@ -90,6 +92,7 @@ async function submit() {
             maxlength="120"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="name"
+            placeholder="Votre nom ou pseudonyme"
           />
           <span v-if="messageFor('name')" class="mt-1 block text-xs text-red-600">{{
             messageFor('name')
@@ -104,22 +107,21 @@ async function submit() {
             type="email"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="email"
+            placeholder="vous@exemple.fr"
           />
           <span v-if="messageFor('email')" class="mt-1 block text-xs text-red-600">{{
             messageFor('email')
           }}</span>
         </label>
 
-        <label v-if="isRegister" class="block text-sm font-medium">
-          Je souhaite créer un compte
-          <select
-            v-model="form.role"
-            class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-          >
-            <option value="visitor">Visiteur</option>
-            <option value="advertiser">Annonceur / modèle</option>
-          </select>
-        </label>
+        <p v-if="isRegister" class="v2-role-summary">
+          {{
+            isAdvertiser
+              ? 'Compte annonceur · publication de profils'
+              : 'Compte visiteur · favoris, recherche et échanges'
+          }}
+          <RouterLink to="/register">Changer de type de compte</RouterLink>
+        </p>
 
         <label class="block text-sm font-medium">
           Mot de passe
@@ -130,6 +132,7 @@ async function submit() {
             minlength="8"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             :autocomplete="isRegister ? 'new-password' : 'current-password'"
+            placeholder="••••••••"
           />
           <span v-if="messageFor('password')" class="mt-1 block text-xs text-red-600">{{
             messageFor('password')
@@ -145,6 +148,7 @@ async function submit() {
             minlength="8"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="new-password"
+            placeholder="••••••••"
           />
           <span
             v-if="messageFor('password_confirmation')"
@@ -154,12 +158,16 @@ async function submit() {
         </label>
 
         <p v-if="error" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ error }}</p>
-        <button
-          type="submit"
-          :disabled="loading"
-          class="button-primary w-full rounded-full focus:outline-none focus:ring-2 focus:ring-dusty focus:ring-offset-2 focus:ring-offset-stone-50"
-        >
-          {{ loading ? 'Chargement…' : isRegister ? 'Créer mon compte' : 'Se connecter' }}
+        <button type="submit" :disabled="loading" class="v2-button primary wide">
+          {{
+            loading
+              ? 'Chargement…'
+              : isRegister
+                ? isAdvertiser
+                  ? 'S’inscrire comme annonceur'
+                  : 'S’inscrire comme membre'
+                : 'Se connecter'
+          }}
         </button>
       </form>
     </section>

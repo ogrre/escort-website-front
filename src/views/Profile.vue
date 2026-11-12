@@ -59,13 +59,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section v-if="loading" class="mx-auto max-w-6xl px-6 py-20 text-center text-stone-500">
+  <section v-if="loading" class="v2-wrap v2-profile-page text-center">
     Chargement du profil…
   </section>
-  <section v-else-if="error" class="mx-auto max-w-6xl px-6 py-20 text-center text-red-700">
+  <section v-else-if="error" class="v2-wrap v2-profile-page text-center">
     {{ error }}
   </section>
-  <section v-else-if="listing" class="mx-auto max-w-6xl px-6 py-10 md:py-14">
+  <section v-else-if="listing" class="v2-wrap v2-profile-page">
     <div class="grid gap-12 md:grid-cols-2">
       <div class="grid grid-cols-2 gap-3">
         <img
