@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ListingCard from '../components/ListingCard.vue';
 import { setSeo } from '../lib/seo';
 import { useListingsStore } from '../stores/listings';
+import { useCopy } from '../lib/i18n';
 
 const store = useListingsStore();
 const route = useRoute();
@@ -13,6 +14,8 @@ const city = ref(String(route.query.city ?? ''));
 const gender = ref(String(route.query.gender ?? ''));
 const verified = ref(false);
 const video = ref(false);
+const { locale } = useCopy({ fr: 'fr', en: 'en' });
+const english = computed(() => locale.value === 'en');
 
 const filtered = computed(() =>
   store.listings.filter((item) => {
@@ -39,7 +42,7 @@ function submit() {
 
 onMounted(() => {
   setSeo({
-    title: 'Rechercher une annonce | Éclat',
+    title: 'Rechercher une annonce | Élégance',
     description: 'Recherchez rapidement les profils disponibles par ville.',
     canonical: `${window.location.origin}/search`,
   });
@@ -48,13 +51,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="v2-wrap v2-search-page">
-    <p class="v2-eyebrow">Annuaire / Recherche</p>
-    <h1>Rechercher une annonce</h1>
+  <main class="v2-page v2-wrap v2-search-page">
+    <p class="v2-eyebrow">{{ english ? 'Directory / Search' : 'Annuaire / Recherche' }}</p>
+    <h1>{{ english ? 'Search listings' : 'Rechercher une annonce' }}</h1>
     <div class="v2-layout">
       <aside class="v2-search-panel v2-filter-panel">
         <div class="v2-section-heading">
-          <h2>Filtres</h2>
+          <h2>{{ english ? 'Filters' : 'Filtres' }}</h2>
           <button
             class="v2-button ghost"
             type="button"
@@ -66,41 +69,56 @@ onMounted(() => {
               video = false;
             "
           >
-            Effacer
+            {{ english ? 'Clear' : 'Effacer' }}
           </button>
         </div>
         <label class="v2-field"
-          ><span>Pseudo / présentation</span
-          ><input v-model="query" placeholder="Pseudo ou mot-clé" @keyup.enter="submit"
+          ><span>{{ english ? 'Username / description' : 'Pseudo / présentation' }}</span
+          ><input
+            v-model="query"
+            :placeholder="english ? 'Username or keyword' : 'Pseudo ou mot-clé'"
+            @keyup.enter="submit"
         /></label>
         <label class="v2-field"
-          ><span>Ville</span
-          ><input v-model="city" placeholder="Rechercher une ville" @keyup.enter="submit"
+          ><span>{{ english ? 'City' : 'Ville' }}</span
+          ><input
+            v-model="city"
+            :placeholder="english ? 'Search for a city' : 'Rechercher une ville'"
+            @keyup.enter="submit"
         /></label>
         <label class="v2-field"
-          ><span>Genre</span
+          ><span>{{ english ? 'Profile' : 'Genre' }}</span
           ><select v-model="gender">
-            <option value="">Tous</option>
-            <option value="female">Femme</option>
-            <option value="male">Homme</option>
+            <option value="">{{ english ? 'All' : 'Tous' }}</option>
+            <option value="female">{{ english ? 'Women' : 'Femme' }}</option>
+            <option value="male">{{ english ? 'Men' : 'Homme' }}</option>
             <option value="trans">TV / TS</option>
           </select></label
         >
         <label class="v2-check"
-          ><input v-model="verified" type="checkbox" /> Profils vérifiés</label
+          ><input v-model="verified" type="checkbox" />
+          {{ english ? 'Verified profiles' : 'Profils vérifiés' }}</label
         >
-        <label class="v2-check"><input v-model="video" type="checkbox" /> Avec vidéo</label>
+        <label class="v2-check"
+          ><input v-model="video" type="checkbox" />
+          {{ english ? 'With video' : 'Avec vidéo' }}</label
+        >
         <button class="v2-button primary wide" type="button" @click="submit">
-          Afficher les résultats
+          {{ english ? 'Show results' : 'Afficher les résultats' }}
         </button>
       </aside>
       <section>
         <div class="v2-search-panel v2-top-search">
           <form class="v2-search-row" @submit.prevent="submit">
-            <input v-model="query" placeholder="Pseudo ou mot-clé" /><input
+            <input
+              v-model="query"
+              :placeholder="english ? 'Username or keyword' : 'Pseudo ou mot-clé'"
+            /><input
               v-model="city"
-              placeholder="Rechercher une ville"
-            /><button class="v2-button primary" type="submit">Chercher</button>
+              :placeholder="english ? 'Search for a city' : 'Rechercher une ville'"
+            /><button class="v2-button primary" type="submit">
+              {{ english ? 'Search' : 'Chercher' }}
+            </button>
           </form>
           <div class="v2-filter-chips">
             <button
@@ -109,21 +127,23 @@ onMounted(() => {
               type="button"
               @click="verified = !verified"
             >
-              ✓ Vérifiés</button
+              {{ english ? '✓ Verified' : '✓ Vérifiés' }}</button
             ><button
               class="v2-chip"
               :class="{ active: video }"
               type="button"
               @click="video = !video"
             >
-              ▶ Vidéo
+              {{ english ? '▶ Video' : '▶ Vidéo' }}
             </button>
           </div>
         </div>
         <div class="v2-section-heading v2-results-heading">
           <div>
-            <h2>Annonces</h2>
-            <span class="v2-muted">{{ filtered.length }} profils</span>
+            <h2>{{ english ? 'Listings' : 'Annonces' }}</h2>
+            <span class="v2-muted"
+              >{{ filtered.length }} {{ english ? 'profiles' : 'profils' }}</span
+            >
           </div>
         </div>
         <div v-if="store.loading" class="v2-listing-grid">
@@ -137,7 +157,13 @@ onMounted(() => {
             :index="index"
           />
         </div>
-        <p v-else class="v2-empty">Aucun résultat. Essayez d’élargir vos filtres.</p>
+        <p v-else class="v2-empty">
+          {{
+            english
+              ? 'No results. Try broadening your filters.'
+              : 'Aucun résultat. Essayez d’élargir vos filtres.'
+          }}
+        </p>
       </section>
     </div>
   </main>
