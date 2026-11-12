@@ -365,6 +365,8 @@ body {
 }
 .v2-field input,
 .v2-field select,
+.v2-search-row input,
+.v2-search-row select,
 .v2-page select,
 .v2-page input {
   width: 100%;
@@ -374,6 +376,11 @@ body {
   background: #18161b;
   color: #fff;
   padding: 11px;
+}
+.v2-search-row input::placeholder,
+.v2-search-row select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
 }
 .v2-button {
   display: inline-flex;

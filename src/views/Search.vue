@@ -48,7 +48,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="v2-wrap v2-search-page">
+  <main class="v2-page v2-wrap v2-search-page">
     <p class="v2-eyebrow">Annuaire / Recherche</p>
     <h1>Rechercher une annonce</h1>
     <div class="v2-layout">
