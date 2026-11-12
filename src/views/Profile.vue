@@ -3,8 +3,11 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../lib/api';
 import type { Listing } from '../stores/listings';
+import { useCopy } from '../lib/i18n';
 
 const route = useRoute();
+const { locale } = useCopy({ fr: 'fr', en: 'en' });
+const english = computed(() => locale.value === 'en');
 const listing = ref<Listing | null>(null);
 const loading = ref(true);
 const error = ref('');
@@ -41,9 +44,13 @@ async function submitComment() {
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } },
     );
     commentBody.value = '';
-    commentMessage.value = 'Merci. Votre commentaire sera publié après modération.';
+    commentMessage.value = english.value
+      ? 'Thank you. Your comment will be published after moderation.'
+      : 'Merci. Votre commentaire sera publié après modération.';
   } catch {
-    commentMessage.value = 'Connectez-vous pour laisser un commentaire.';
+    commentMessage.value = english.value
+      ? 'Log in to leave a comment.'
+      : 'Connectez-vous pour laisser un commentaire.';
   }
 }
 
@@ -51,7 +58,9 @@ onMounted(async () => {
   try {
     listing.value = (await api.get(`/listings/${route.params.id}`)).data.data;
   } catch {
-    error.value = 'Ce profil n’est plus disponible.';
+    error.value = english.value
+      ? 'This profile is no longer available.'
+      : 'Ce profil n’est plus disponible.';
   } finally {
     loading.value = false;
   }
@@ -60,7 +69,7 @@ onMounted(async () => {
 
 <template>
   <section v-if="loading" class="v2-wrap v2-profile-page text-center">
-    Chargement du profil…
+    {{ english ? 'Loading profile…' : 'Chargement du profil…' }}
   </section>
   <section v-else-if="error" class="v2-wrap v2-profile-page text-center">
     {{ error }}
@@ -88,7 +97,9 @@ onMounted(async () => {
         </p>
         <p class="mt-8 whitespace-pre-line leading-8 text-zinc-600">{{ listing.description }}</p>
         <div v-if="listing.languages?.length" class="mt-8">
-          <h2 class="text-sm font-semibold uppercase tracking-wider text-stone-500">Langues</h2>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-stone-500">
+            {{ english ? 'Languages' : 'Langues' }}
+          </h2>
           <p class="mt-2 text-stone-700">{{ listing.languages.join(' · ') }}</p>
         </div>
         <div class="mt-8 flex flex-wrap gap-2">
@@ -111,7 +122,7 @@ onMounted(async () => {
           v-if="visibleContacts.length"
           class="mt-10 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-stone-700"
         >
-          <h2 class="text-lg font-medium">Contact direct</h2>
+          <h2 class="text-lg font-medium">{{ english ? 'Direct contact' : 'Contact direct' }}</h2>
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <a
               v-for="[type, contact] in visibleContacts"
@@ -130,17 +141,21 @@ onMounted(async () => {
       </div>
     </div>
     <section class="mt-20 border-t border-zinc-200 pt-10">
-      <h2 class="text-3xl font-light">Commentaires</h2>
+      <h2 class="text-3xl font-light">{{ english ? 'Comments' : 'Commentaires' }}</h2>
       <div class="mt-6 space-y-4">
         <article
           v-for="comment in listing.comments"
           :key="comment.id"
           class="rounded-2xl border border-zinc-200 bg-white p-5"
         >
-          <p class="text-sm text-zinc-500">{{ comment.author?.name || 'Visiteur' }}</p>
+          <p class="text-sm text-zinc-500">
+            {{ comment.author?.name || (english ? 'Visitor' : 'Visiteur') }}
+          </p>
           <p class="mt-2 text-zinc-700">{{ comment.body }}</p>
         </article>
-        <p v-if="!listing.comments?.length" class="text-zinc-500">Aucun commentaire publié.</p>
+        <p v-if="!listing.comments?.length" class="text-zinc-500">
+          {{ english ? 'No comments published.' : 'Aucun commentaire publié.' }}
+        </p>
       </div>
       <form class="mt-8 max-w-2xl" @submit.prevent="submitComment">
         <textarea
@@ -148,11 +163,15 @@ onMounted(async () => {
           required
           minlength="10"
           maxlength="2000"
-          placeholder="Votre commentaire (publication après modération)"
+          :placeholder="
+            english
+              ? 'Your comment (published after moderation)'
+              : 'Votre commentaire (publication après modération)'
+          "
           class="min-h-28 w-full rounded-xl border border-zinc-300 bg-white p-4 outline-none focus:border-dusty dark:border-stone-700 dark:bg-stone-900"
         ></textarea
         ><button class="mt-3 rounded-full bg-dusty px-6 py-3 font-medium text-white">
-          Publier un commentaire
+          {{ english ? 'Post comment' : 'Publier un commentaire' }}
         </button>
         <p v-if="commentMessage" class="mt-3 text-sm text-dusty-dark">{{ commentMessage }}</p>
       </form>

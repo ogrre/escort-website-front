@@ -168,6 +168,21 @@ body {
 .dashboard-page select:disabled {
   color: #aaa0aa;
 }
+.v2-app-shell input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.v2-app-shell textarea,
+.v2-app-shell select {
+  border: 1px solid #544450;
+  border-radius: 8px;
+  background: #18161b;
+  color: #fff;
+  padding: 11px;
+}
+.v2-app-shell input:not([type='checkbox']):not([type='radio']):not([type='file'])::placeholder,
+.v2-app-shell textarea::placeholder,
+.v2-app-shell select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
 .dark .bg-white {
   background-color: rgb(28 25 23) !important;
 }

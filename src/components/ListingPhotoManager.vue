@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { api } from '../lib/api';
+import { useCopy } from '../lib/i18n';
 
 export interface ListingPhoto {
   id: string;
@@ -18,6 +19,8 @@ const props = defineProps<{
   listingUuid: string;
   photos: ListingPhoto[];
 }>();
+const { locale } = useCopy({ fr: 'fr', en: 'en' });
+const english = computed(() => locale.value === 'en');
 
 const emit = defineEmits<{
   'update:photos': [photos: ListingPhoto[]];
@@ -74,13 +77,23 @@ async function upload(event: globalThis.Event) {
 
   if (!files.length) return;
   if (files.length > remainingSlots.value) {
-    emit('message', `Vous pouvez encore ajouter ${remainingSlots.value} photo(s) maximum.`);
+    emit(
+      'message',
+      english.value
+        ? `You can add up to ${remainingSlots.value} more photo(s).`
+        : `Vous pouvez encore ajouter ${remainingSlots.value} photo(s) maximum.`,
+    );
     return;
   }
 
   const invalid = files.find((file) => !ACCEPTED_TYPES.has(file.type) || file.size > MAX_FILE_SIZE);
   if (invalid) {
-    emit('message', 'Chaque photo doit être au format JPG, PNG ou WEBP et peser 10 Mo maximum.');
+    emit(
+      'message',
+      english.value
+        ? 'Each photo must be JPG, PNG or WEBP and no larger than 10 MB.'
+        : 'Chaque photo doit être au format JPG, PNG ou WEBP et peser 10 Mo maximum.',
+    );
     return;
   }
 
@@ -96,23 +109,40 @@ async function upload(event: globalThis.Event) {
     const uploaded = (response.data.data ?? []) as ListingPhoto[];
     publishPhotos([...managedPhotos.value, ...uploaded]);
     altText.value = '';
-    emit('message', `${uploaded.length} photo(s) ajoutée(s).`);
+    emit(
+      'message',
+      english.value
+        ? `${uploaded.length} photo(s) added.`
+        : `${uploaded.length} photo(s) ajoutée(s).`,
+    );
   } catch (reason: unknown) {
-    emit('message', errorMessage(reason, 'Les photos n’ont pas pu être ajoutées.'));
+    emit(
+      'message',
+      errorMessage(
+        reason,
+        english.value ? 'The photos could not be added.' : 'Les photos n’ont pas pu être ajoutées.',
+      ),
+    );
   } finally {
     uploading.value = false;
   }
 }
 
 async function remove(photo: ListingPhoto) {
-  if (!window.confirm('Supprimer cette photo ?')) return;
+  if (!window.confirm(english.value ? 'Delete this photo?' : 'Supprimer cette photo ?')) return;
   deletingId.value = photo.id;
   try {
     await api.delete(`/listings/${props.listingUuid}/photos/${photo.id}`, { headers: headers() });
     publishPhotos(managedPhotos.value.filter((item) => item.id !== photo.id));
-    emit('message', 'Photo supprimée.');
+    emit('message', english.value ? 'Photo deleted.' : 'Photo supprimée.');
   } catch (reason: unknown) {
-    emit('message', errorMessage(reason, 'La photo n’a pas pu être supprimée.'));
+    emit(
+      'message',
+      errorMessage(
+        reason,
+        english.value ? 'The photo could not be deleted.' : 'La photo n’a pas pu être supprimée.',
+      ),
+    );
   } finally {
     deletingId.value = null;
   }
@@ -139,7 +169,15 @@ async function reorder(next: ListingPhoto[]) {
     publishPhotos((response.data.data ?? managedPhotos.value) as ListingPhoto[]);
   } catch (reason: unknown) {
     publishPhotos(previous);
-    emit('message', errorMessage(reason, 'L’ordre des photos n’a pas pu être enregistré.'));
+    emit(
+      'message',
+      errorMessage(
+        reason,
+        english.value
+          ? 'The photo order could not be saved.'
+          : 'L’ordre des photos n’a pas pu être enregistré.',
+      ),
+    );
   } finally {
     reordering.value = false;
   }
@@ -160,17 +198,22 @@ function drop(index: number) {
   <section class="soft-card space-y-5 p-6" aria-labelledby="photos-title">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p class="eyebrow">Galerie</p>
-        <h2 id="photos-title" class="mt-2 text-2xl font-light">Vos photos</h2>
+        <p class="eyebrow">{{ english ? 'Gallery' : 'Galerie' }}</p>
+        <h2 id="photos-title" class="mt-2 text-2xl font-light">
+          {{ english ? 'Your photos' : 'Vos photos' }}
+        </h2>
         <p class="mt-2 text-sm text-stone-500">
-          La première photo sera affichée comme photo principale. {{ photos.length }}/{{
-            MAX_PHOTOS
+          {{
+            english
+              ? 'The first photo will be used as the main photo.'
+              : 'La première photo sera affichée comme photo principale.'
           }}
-          photos.
+          {{ managedPhotos.length }}/{{ MAX_PHOTOS }}
+          {{ english ? 'photos.' : 'photos.' }}
         </p>
       </div>
       <span class="rounded-full bg-dusty/10 px-3 py-1 text-xs font-medium text-dusty-dark">
-        {{ remainingSlots }} place(s) restante(s)
+        {{ remainingSlots }} {{ english ? 'slot(s) remaining' : 'place(s) restante(s)' }}
       </span>
     </div>
 
@@ -196,7 +239,7 @@ function drop(index: number) {
             v-if="index === 0"
             class="rounded-full bg-stone-950/75 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white"
           >
-            Principale
+            {{ english ? 'Main' : 'Principale' }}
           </span>
           <span v-else class="rounded-full bg-stone-950/65 px-2 py-1 text-[10px] text-white">
             {{ index + 1 }}
@@ -205,10 +248,12 @@ function drop(index: number) {
             type="button"
             class="rounded-full bg-stone-950/75 px-2 py-1 text-xs text-white opacity-100 transition hover:bg-red-700 sm:opacity-0 sm:group-hover:opacity-100"
             :disabled="deletingId === photo.id"
-            :aria-label="`Supprimer la photo ${index + 1}`"
+            :aria-label="
+              english ? 'Delete photo ' + (index + 1) : 'Supprimer la photo ' + (index + 1)
+            "
             @click="remove(photo)"
           >
-            {{ deletingId === photo.id ? '…' : 'Supprimer' }}
+            {{ deletingId === photo.id ? '…' : english ? 'Delete' : 'Supprimer' }}
           </button>
         </div>
         <div
@@ -218,7 +263,11 @@ function drop(index: number) {
             type="button"
             class="rounded-full bg-white/90 px-2 py-1 text-xs text-stone-900 disabled:opacity-40"
             :disabled="index === 0 || reordering"
-            :aria-label="`Déplacer la photo ${index + 1} vers la gauche`"
+            :aria-label="
+              english
+                ? 'Move photo ' + (index + 1) + ' left'
+                : 'Déplacer la photo ' + (index + 1) + ' vers la gauche'
+            "
             @click="movePhoto(index, index - 1)"
           >
             ←
@@ -228,7 +277,11 @@ function drop(index: number) {
             type="button"
             class="rounded-full bg-white/90 px-2 py-1 text-xs text-stone-900 disabled:opacity-40"
             :disabled="index === managedPhotos.length - 1 || reordering"
-            :aria-label="`Déplacer la photo ${index + 1} vers la droite`"
+            :aria-label="
+              english
+                ? 'Move photo ' + (index + 1) + ' right'
+                : 'Déplacer la photo ' + (index + 1) + ' vers la droite'
+            "
             @click="movePhoto(index, index + 1)"
           >
             →
@@ -241,24 +294,36 @@ function drop(index: number) {
       v-else
       class="rounded-xl border border-dashed border-dusty/50 bg-dusty/10 p-5 text-sm text-stone-600 dark:text-stone-300"
     >
-      Ajoutez au moins une photo pour présenter votre annonce.
+      {{
+        english
+          ? 'Add at least one photo to present your listing.'
+          : 'Ajoutez au moins une photo pour présenter votre annonce.'
+      }}
     </div>
 
     <div class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
       <label class="block text-sm font-medium">
-        Texte alternatif (facultatif)
+        {{ english ? 'Alternative text (optional)' : 'Texte alternatif (facultatif)' }}
         <input
           v-model="altText"
           type="text"
           maxlength="255"
-          placeholder="Décrivez brièvement la photo"
+          :placeholder="english ? 'Briefly describe the photo' : 'Décrivez brièvement la photo'"
           class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
         />
       </label>
       <label
         class="inline-flex h-12 cursor-pointer items-center justify-center rounded-full bg-dusty px-5 text-sm font-medium text-white transition hover:bg-dusty-dark has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
       >
-        <span>{{ uploading ? 'Ajout…' : 'Ajouter des photos' }}</span>
+        <span>{{
+          uploading
+            ? english
+              ? 'Adding…'
+              : 'Ajout…'
+            : english
+              ? 'Add photos'
+              : 'Ajouter des photos'
+        }}</span>
         <input
           :key="inputKey"
           type="file"
@@ -271,7 +336,11 @@ function drop(index: number) {
       </label>
     </div>
     <p class="text-xs text-stone-500">
-      JPG, PNG ou WEBP · 10 Mo maximum par fichier · 10 photos maximum.
+      {{
+        english
+          ? 'JPG, PNG or WEBP · 10 MB maximum per file · 10 photos maximum.'
+          : 'JPG, PNG ou WEBP · 10 Mo maximum par fichier · 10 photos maximum.'
+      }}
     </p>
   </section>
 </template>

@@ -1,7 +1,77 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { api } from '../lib/api';
 import ListingPhotoManager, { type ListingPhoto } from '../components/ListingPhotoManager.vue';
+import { useCopy } from '../lib/i18n';
+
+const { locale } = useCopy({ fr: 'fr', en: 'en' });
+const english = computed(() => locale.value === 'en');
+const copy = computed(() =>
+  english.value
+    ? {
+        eyebrow: 'Advertiser space',
+        title: 'Create your profile',
+        intro:
+          'Complete your profile, activate the weekly plan, then verify your age before publishing.',
+        subscription: 'Weekly subscription',
+        publishWeek: 'Publish for one week',
+        active: 'Weekly plan active',
+        choose: 'Choose weekly plan',
+        ageTitle: 'Age confirmation required',
+        ageText: 'I confirm that I am 18 or older and authorised to publish this type of content.',
+        ageStart: 'Start age verification',
+        details: 'Profile details',
+        about: 'Tell visitors about your profile',
+        display: 'Display name',
+        description: 'Description',
+        city: 'City',
+        country: 'Country code',
+        age: 'Age',
+        services: 'Services',
+        status: 'Visible status',
+        save: 'Save profile',
+        create: 'Create profile',
+        publish: 'Publish listing',
+        placeholders: {
+          name: 'Your name or professional name',
+          description: 'Introduce yourself and your availability...',
+          services: 'Dinner, companionship...',
+          status: 'Available tonight',
+        },
+      }
+    : {
+        eyebrow: 'Espace annonceur',
+        title: 'Créez votre profil',
+        intro:
+          'Complétez votre profil, activez le forfait hebdomadaire, puis vérifiez votre âge avant de publier.',
+        subscription: 'Abonnement hebdomadaire',
+        publishWeek: 'Publier pendant une semaine',
+        active: 'Forfait hebdomadaire actif',
+        choose: 'Choisir le forfait hebdomadaire',
+        ageTitle: 'Confirmation d’âge obligatoire',
+        ageText:
+          'Je confirme avoir 18 ans ou plus et être autorisé(e) à publier ce type de contenu.',
+        ageStart: 'Démarrer la vérification d’âge',
+        details: 'Détails du profil',
+        about: 'Présentez votre profil aux visiteurs',
+        display: 'Nom affiché',
+        description: 'Description',
+        city: 'Ville',
+        country: 'Code pays',
+        age: 'Âge',
+        services: 'Services',
+        status: 'Statut visible',
+        save: 'Enregistrer le profil',
+        create: 'Créer le profil',
+        publish: 'Publier l’annonce',
+        placeholders: {
+          name: 'Votre nom ou nom professionnel',
+          description: 'Présentez-vous et indiquez vos disponibilités…',
+          services: 'Dîner, accompagnement…',
+          status: 'Disponible ce soir',
+        },
+      },
+);
 
 const message = ref('');
 const ageConfirmed = ref(
@@ -33,6 +103,21 @@ const labels: Record<string, string> = {
   instagram: 'Instagram',
   other: 'Autre',
 };
+
+function contactLabel(type: string) {
+  if (english.value)
+    return (
+      {
+        phone: 'Phone',
+        whatsapp: 'WhatsApp',
+        snapchat: 'Snapchat',
+        telegram: 'Telegram',
+        instagram: 'Instagram',
+        other: 'Other',
+      }[type] ?? type
+    );
+  return labels[type] ?? type;
+}
 
 function headers() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` };
@@ -110,18 +195,18 @@ onMounted(async () => {
 
 <template>
   <section class="dashboard-page mx-auto max-w-4xl px-6 py-14">
-    <p class="eyebrow">Advertiser space</p>
-    <h1 class="mt-3 text-4xl font-light md:text-5xl">Create your profile</h1>
+    <p class="eyebrow">{{ copy.eyebrow }}</p>
+    <h1 class="mt-3 text-4xl font-light md:text-5xl">{{ copy.title }}</h1>
     <p class="mt-4 max-w-2xl text-stone-600">
-      Complete your profile, activate the weekly plan, then verify your age before publishing.
+      {{ copy.intro }}
     </p>
     <p v-if="message" class="mt-4 text-dusty-dark">{{ message }}</p>
     <div
       class="soft-card mt-8 flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
     >
       <div>
-        <p class="eyebrow">Weekly subscription</p>
-        <h2 class="mt-2 text-xl font-medium">Publish for one week</h2>
+        <p class="eyebrow">{{ copy.subscription }}</p>
+        <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
         <p class="mt-1 text-sm text-stone-500">
           Your profile remains active for 7 days after payment.
         </p>
@@ -132,55 +217,57 @@ onMounted(async () => {
         class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
         @click="startWeeklySubscription"
       >
-        {{ subscribing ? 'Opening…' : 'Choose weekly plan' }}
+        {{ subscribing ? 'Opening…' : copy.choose }}
       </button>
-      <span v-else class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
-        >Weekly plan active</span
+      <span
+        v-else
+        class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
+        >{{ copy.active }}</span
       >
     </div>
     <div v-if="!ageConfirmed" class="mt-8 rounded-2xl border border-dusty/30 bg-dusty/10 p-5">
-      <h2 class="font-medium">Confirmation d’âge obligatoire</h2>
+      <h2 class="font-medium">{{ copy.ageTitle }}</h2>
       <p class="mt-2 text-sm text-zinc-700">
-        Je confirme avoir 18 ans ou plus et être autorisé(e) à publier ce type de contenu.
+        {{ copy.ageText }}
       </p>
       <button
         :disabled="confirmingAge"
         class="mt-4 rounded-full bg-dusty px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
         @click="startAgeVerification"
       >
-        {{ confirmingAge ? 'Ouverture…' : 'Start age verification' }}
+        {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : copy.ageStart }}
       </button>
     </div>
     <form class="mt-10 space-y-6" @submit.prevent="save">
       <div class="soft-card space-y-5 p-6">
         <div>
-          <p class="eyebrow">Profile details</p>
-          <h2 class="mt-2 text-2xl font-light">Tell visitors about your profile</h2>
+          <p class="eyebrow">{{ copy.details }}</p>
+          <h2 class="mt-2 text-2xl font-light">{{ copy.about }}</h2>
         </div>
         <label class="block text-sm font-medium"
-          >Display name
+          >{{ copy.display }}
           <input
             v-model="form.name"
             required
             maxlength="120"
             class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-            placeholder="Your name or professional name"
+            :placeholder="copy.placeholders.name"
           />
         </label>
         <label class="block text-sm font-medium"
-          >Description
+          >{{ copy.description }}
           <textarea
             v-model="form.description"
             required
             minlength="80"
             maxlength="5000"
             class="mt-2 min-h-36 w-full rounded-xl border border-zinc-300 bg-white p-3"
-            placeholder="Introduce yourself and your availability..."
+            :placeholder="copy.placeholders.description"
           ></textarea>
         </label>
         <div class="grid gap-4 md:grid-cols-3">
           <label class="block text-sm font-medium"
-            >City
+            >{{ copy.city }}
             <input
               v-model="form.city"
               required
@@ -190,7 +277,7 @@ onMounted(async () => {
             />
           </label>
           <label class="block text-sm font-medium"
-            >Country code
+            >{{ copy.country }}
             <input
               v-model="form.country"
               required
@@ -200,7 +287,7 @@ onMounted(async () => {
             />
           </label>
           <label class="block text-sm font-medium"
-            >Age
+            >{{ copy.age }}
             <input
               v-model.number="form.age"
               required
@@ -212,20 +299,21 @@ onMounted(async () => {
           </label>
         </div>
         <label class="block text-sm font-medium"
-          >Services
+          >{{ copy.services }}
           <input
             v-model="form.services[0]"
             required
             class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-            placeholder="Dinner, companionship..."
+            :placeholder="copy.placeholders.services"
           />
         </label>
       </div>
       <label class="block"
-        >Statut visible<input
+        >{{ copy.status
+        }}<input
           v-model="form.status_text"
           maxlength="80"
-          placeholder="Disponible ce soir"
+          :placeholder="copy.placeholders.status"
           class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
       /></label>
       <div class="grid gap-4 md:grid-cols-2">
@@ -234,7 +322,7 @@ onMounted(async () => {
           :key="type"
           class="rounded-xl border border-zinc-200 bg-white p-4"
           ><span class="flex items-center justify-between font-medium"
-            >{{ labels[type]
+            >{{ contactLabel(type)
             }}<input
               v-model="form.contacts[type].enabled"
               type="checkbox"
@@ -242,12 +330,12 @@ onMounted(async () => {
           ><input
             v-model="form.contacts[type].value"
             :disabled="!form.contacts[type].enabled"
-            :placeholder="labels[type]"
+            :placeholder="contactLabel(type)"
             class="mt-3 w-full rounded-lg border border-zinc-300 p-2 disabled:bg-zinc-100"
         /></label>
       </div>
       <button class="rounded-full bg-dusty px-6 py-3 font-medium text-white">
-        {{ listingId ? 'Save profile' : 'Create profile' }}
+        {{ listingId ? copy.save : copy.create }}
       </button>
       <button
         type="button"
@@ -255,7 +343,7 @@ onMounted(async () => {
         class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
         @click="publish"
       >
-        Publier l’annonce
+        {{ copy.publish }}
       </button>
     </form>
     <ListingPhotoManager

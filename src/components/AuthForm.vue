@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { api } from '../lib/api';
+import { useCopy } from '../lib/i18n';
 
 const props = defineProps<{ mode: 'register' | 'login' }>();
 const router = useRouter();
@@ -25,9 +26,17 @@ const form = reactive({
 
 const isRegister = computed(() => props.mode === 'register');
 const isAdvertiser = computed(() => form.role === 'advertiser');
+const { locale } = useCopy({ fr: 'fr', en: 'en' });
+const english = computed(() => locale.value === 'en');
 const title = computed(() => {
-  if (!isRegister.value) return 'Se connecter';
-  return isAdvertiser.value ? 'Créer votre compte annonceur' : 'Créer votre compte visiteur';
+  if (!isRegister.value) return english.value ? 'Log in' : 'Se connecter';
+  return isAdvertiser.value
+    ? english.value
+      ? 'Create your advertiser account'
+      : 'Créer votre compte annonceur'
+    : english.value
+      ? 'Create your visitor account'
+      : 'Créer votre compte visiteur';
 });
 
 function messageFor(field: string) {
@@ -39,9 +48,12 @@ function apiErrorMessage(value: unknown) {
     const data = value.response?.data as
       { message?: string; errors?: Record<string, string[]> } | undefined;
     errors.value = data?.errors ?? {};
-    return data?.message ?? 'Impossible de traiter la demande.';
+    return (
+      data?.message ??
+      (english.value ? 'The request could not be completed.' : 'Impossible de traiter la demande.')
+    );
   }
-  return 'Une erreur inattendue est survenue.';
+  return english.value ? 'An unexpected error occurred.' : 'Une erreur inattendue est survenue.';
 }
 
 async function submit() {
@@ -72,10 +84,14 @@ async function submit() {
 <template>
   <main class="v2-wrap v2-auth-page">
     <div>
-      <p class="v2-eyebrow">Espace privé</p>
+      <p class="v2-eyebrow">{{ english ? 'Private space' : 'Espace privé' }}</p>
       <h1>{{ title }}</h1>
       <p class="v2-lead">
-        Enregistrez vos préférences et profitez d’une expérience discrète et personnalisée.
+        {{
+          english
+            ? 'Save your preferences and enjoy a discreet, personalised experience.'
+            : 'Enregistrez vos préférences et profitez d’une expérience discrète et personnalisée.'
+        }}
       </p>
     </div>
 
@@ -85,14 +101,14 @@ async function submit() {
           {{ notice }}
         </p>
         <label v-if="isRegister" class="block text-sm font-medium">
-          Nom ou pseudonyme
+          {{ english ? 'Name or username' : 'Nom ou pseudonyme' }}
           <input
             v-model="form.name"
             required
             maxlength="120"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="name"
-            placeholder="Votre nom ou pseudonyme"
+            :placeholder="english ? 'Your name or username' : 'Votre nom ou pseudonyme'"
           />
           <span v-if="messageFor('name')" class="mt-1 block text-xs text-red-600">{{
             messageFor('name')
@@ -100,14 +116,14 @@ async function submit() {
         </label>
 
         <label class="block text-sm font-medium">
-          Adresse e-mail
+          {{ english ? 'Email address' : 'Adresse e-mail' }}
           <input
             v-model="form.email"
             required
             type="email"
             class="mt-2 w-full rounded-xl border border-zinc-300 p-3"
             autocomplete="email"
-            placeholder="vous@exemple.fr"
+            :placeholder="english ? 'you@example.com' : 'vous@exemple.fr'"
           />
           <span v-if="messageFor('email')" class="mt-1 block text-xs text-red-600">{{
             messageFor('email')
@@ -117,14 +133,18 @@ async function submit() {
         <p v-if="isRegister" class="v2-role-summary">
           {{
             isAdvertiser
-              ? 'Compte annonceur · publication de profils'
-              : 'Compte visiteur · favoris, recherche et échanges'
+              ? english
+                ? 'Advertiser account · profile publishing'
+                : 'Compte annonceur · publication de profils'
+              : english
+                ? 'Visitor account · favourites, search and messages'
+                : 'Compte visiteur · favoris, recherche et échanges'
           }}
           <RouterLink to="/register">Changer de type de compte</RouterLink>
         </p>
 
         <label class="block text-sm font-medium">
-          Mot de passe
+          {{ english ? 'Password' : 'Mot de passe' }}
           <input
             v-model="form.password"
             required
@@ -140,7 +160,7 @@ async function submit() {
         </label>
 
         <label v-if="isRegister" class="block text-sm font-medium">
-          Confirmer le mot de passe
+          {{ english ? 'Confirm password' : 'Confirmer le mot de passe' }}
           <input
             v-model="form.password_confirmation"
             required
@@ -161,12 +181,20 @@ async function submit() {
         <button type="submit" :disabled="loading" class="v2-button primary wide">
           {{
             loading
-              ? 'Chargement…'
+              ? english
+                ? 'Loading…'
+                : 'Chargement…'
               : isRegister
                 ? isAdvertiser
-                  ? 'S’inscrire comme annonceur'
-                  : 'S’inscrire comme membre'
-                : 'Se connecter'
+                  ? english
+                    ? 'Register as advertiser'
+                    : 'S’inscrire comme annonceur'
+                  : english
+                    ? 'Register as member'
+                    : 'S’inscrire comme membre'
+                : english
+                  ? 'Log in'
+                  : 'Se connecter'
           }}
         </button>
       </form>
