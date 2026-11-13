@@ -14,6 +14,8 @@ export interface Listing {
   photos: { id?: string; url: string; alt?: string }[];
   verified: boolean;
   boosted: boolean;
+  gender?: string;
+  has_video?: boolean;
   status_text?: string;
   availability?: Record<string, unknown>;
   languages?: string[];

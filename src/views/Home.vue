@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import ListingCard from '../components/ListingCard.vue';
 import { api } from '../lib/api';
 import { cachedRequest } from '../lib/request-cache';
@@ -10,11 +11,14 @@ import { setSeo } from '../lib/seo';
 import { useListingsStore } from '../stores/listings';
 
 const router = useRouter();
+const route = useRoute();
 const store = useListingsStore();
 const locale = inject(localeKey, ref<Locale>('fr'));
 const query = ref('');
 const selectedCity = ref('');
 const selectedGender = ref('');
+const selectedVerified = ref(false);
+const selectedVideo = ref(false);
 const majorCities = ref<City[]>([]);
 const otherCities = ref<City[]>([]);
 const loadingCities = ref(true);
@@ -62,7 +66,13 @@ const copy = computed(() =>
         empty: 'No listing is available right now.',
       },
 );
-const visibleListings = computed(() => store.listings.slice(0, 8));
+const visibleListings = computed(() =>
+  store.listings
+    .filter((listing) => !selectedGender.value || listing.gender === selectedGender.value)
+    .filter((listing) => !selectedVerified.value || listing.verified)
+    .filter((listing) => !selectedVideo.value || listing.has_video)
+    .slice(0, 8),
+);
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
 function cityPath(city: City) {
   return `/cities/${encodeURIComponent(city.city)}`;
@@ -72,9 +82,32 @@ function submitSearch() {
   if (query.value.trim()) params.set('q', query.value.trim());
   if (selectedCity.value) params.set('city', selectedCity.value);
   if (selectedGender.value) params.set('gender', selectedGender.value);
-  router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
+  if (selectedVerified.value) params.set('verified', '1');
+  if (selectedVideo.value) params.set('video', '1');
+  router.push(`/${params.toString() ? `?${params.toString()}` : ''}`);
 }
+function syncFilters() {
+  query.value = String(route.query.q ?? '');
+  selectedCity.value = String(route.query.city ?? '');
+  selectedGender.value = String(route.query.gender ?? '');
+  selectedVerified.value = route.query.verified === '1';
+  selectedVideo.value = route.query.video === '1';
+}
+async function loadListings() {
+  const params: Record<string, string> = { sort: 'boosted' };
+  if (query.value) params.search = query.value;
+  if (selectedCity.value) params.city = selectedCity.value;
+  await store.search(params);
+}
+watch(
+  () => route.fullPath,
+  async () => {
+    syncFilters();
+    await loadListings();
+  },
+);
 onMounted(async () => {
+  syncFilters();
   setSeo({
     title: 'Élégance — Profils vérifiés près de chez vous',
     description: 'Trouvez rapidement des profils et annonces disponibles dans votre ville.',
@@ -93,7 +126,7 @@ onMounted(async () => {
         async () => (await api.get('/locations', { params: { has_listings: 1 } })).data.data,
         300_000,
       ),
-      store.search({ sort: 'boosted' }),
+      loadListings(),
     ]);
     majorCities.value = normalizeLocations(major as ApiLocation[]);
     const majorNames = new Set(
@@ -159,17 +192,31 @@ onMounted(async () => {
         </select>
         <select v-model="selectedGender">
           <option value="">{{ copy.allProfiles }}</option>
-          <option value="female">{{ copy.women }}</option>
-          <option value="male">{{ copy.men }}</option>
-          <option value="trans">TV / TS</option>
+          <option value="femme">{{ copy.women }}</option>
+          <option value="homme">{{ copy.men }}</option>
+          <option value="tvts">TV / TS</option>
           <option value="couple">Couple</option>
         </select>
         <button class="v2-button primary" type="submit">{{ copy.search }}</button>
       </form>
       <div class="v2-filter-chips">
-        <RouterLink to="/search?verified=1" class="v2-chip">✓ Vérifiés</RouterLink>
-        <RouterLink to="/search?video=1" class="v2-chip">▶ Avec vidéo</RouterLink>
-        <RouterLink to="/search" class="v2-chip">Tous les filtres →</RouterLink>
+        <button
+          type="button"
+          class="v2-chip"
+          :class="{ active: selectedVerified }"
+          @click="selectedVerified = !selectedVerified"
+        >
+          ✓ Vérifiés
+        </button>
+        <button
+          type="button"
+          class="v2-chip"
+          :class="{ active: selectedVideo }"
+          @click="selectedVideo = !selectedVideo"
+        >
+          ▶ Avec vidéo
+        </button>
+        <button type="button" class="v2-chip" @click="submitSearch">{{ copy.allListings }}</button>
       </div>
     </section>
     <section class="v2-wrap v2-listings" aria-labelledby="listings-title">
@@ -178,7 +225,9 @@ onMounted(async () => {
           <p class="v2-eyebrow">{{ copy.eyebrow }}</p>
           <h2 id="listings-title">{{ copy.listings }}</h2>
         </div>
-        <RouterLink to="/search" class="v2-button">{{ copy.allListings }}</RouterLink>
+        <button type="button" class="v2-button" @click="submitSearch">
+          {{ copy.allListings }}
+        </button>
       </div>
       <div v-if="store.loading" class="v2-listing-grid">
         <span v-for="n in 4" :key="n" class="v2-listing-skeleton"></span>

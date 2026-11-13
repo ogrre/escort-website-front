@@ -25,6 +25,7 @@ const copy = computed(() =>
         display: 'Display name',
         description: 'Description',
         city: 'City',
+        location: 'Publishing city',
         country: 'Country code',
         age: 'Age',
         services: 'Services',
@@ -57,6 +58,7 @@ const copy = computed(() =>
         display: 'Nom affiché',
         description: 'Description',
         city: 'Ville',
+        location: 'Ville de publication',
         country: 'Code pays',
         age: 'Âge',
         services: 'Services',
@@ -82,6 +84,7 @@ const ageConfirmed = ref(
 const confirmingAge = ref(false);
 const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
+const locations = ref<Array<{ id: string; name: string; country?: string }>>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
 const form = reactive({
@@ -89,6 +92,7 @@ const form = reactive({
   description: '',
   age: 18,
   city: '',
+  location_id: '',
   country: 'FR',
   services: [] as string[],
   status_text: '',
@@ -123,6 +127,12 @@ function headers() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` };
 }
 async function save() {
+  if (!form.location_id) {
+    message.value = english.value
+      ? 'Choose a publishing city before saving your profile.'
+      : 'Choisissez une ville de publication avant d’enregistrer votre profil.';
+    return;
+  }
   if (listingId.value) {
     await api.put(`/listings/${listingId.value}`, { ...form }, { headers: headers() });
     message.value = 'Profile updated.';
@@ -178,11 +188,32 @@ onMounted(async () => {
     const userResponse = await api.get('/auth/me', { headers: headers() });
     ageConfirmed.value = Boolean(userResponse.data.age_confirmed);
     localStorage.setItem('user', JSON.stringify(userResponse.data));
-    const data = (await api.get('/my/listings', { headers: headers() })).data.data[0];
-    subscription.value = (await api.get('/subscription', { headers: headers() })).data.data;
+    const [locationsResponse, listingsResponse] = await Promise.all([
+      api.get('/locations', { params: { is_major: 1 }, headers: headers() }),
+      api.get('/my/listings', { headers: headers() }),
+    ]);
+    locations.value = (locationsResponse.data.data ?? []).map(
+      (location: {
+        id: string;
+        name?: string;
+        city?: string;
+        country?: { name?: string } | string;
+      }) => ({
+        id: location.id,
+        name: location.name ?? location.city ?? '',
+        country: typeof location.country === 'string' ? location.country : location.country?.name,
+      }),
+    );
+    const data = listingsResponse.data.data?.[0];
+    try {
+      subscription.value = (await api.get('/subscription', { headers: headers() })).data.data;
+    } catch {
+      subscription.value = null;
+    }
     if (data) {
       listingId.value = data.id;
       Object.assign(form, data);
+      form.location_id = data.location?.id ?? data.location_id ?? '';
       photos.value = (data.photos ?? []) as ListingPhoto[];
     }
 
@@ -265,26 +296,19 @@ onMounted(async () => {
             :placeholder="copy.placeholders.description"
           ></textarea>
         </label>
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 md:grid-cols-2">
           <label class="block text-sm font-medium"
-            >{{ copy.city }}
-            <input
-              v-model="form.city"
+            >{{ copy.location }}
+            <select
+              v-model="form.location_id"
               required
-              maxlength="100"
               class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              placeholder="Paris"
-            />
-          </label>
-          <label class="block text-sm font-medium"
-            >{{ copy.country }}
-            <input
-              v-model="form.country"
-              required
-              maxlength="2"
-              class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3 uppercase"
-              placeholder="FR"
-            />
+            >
+              <option value="">{{ english ? 'Choose a city' : 'Choisir une ville' }}</option>
+              <option v-for="location in locations" :key="location.id" :value="location.id">
+                {{ location.name }}{{ location.country ? ` · ${location.country}` : '' }}
+              </option>
+            </select>
           </label>
           <label class="block text-sm font-medium"
             >{{ copy.age }}

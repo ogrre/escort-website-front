@@ -6,7 +6,6 @@ const publicPaths = [
   '/',
   '/register',
   '/login',
-  '/search',
   '/mentions-legales',
   '/confidentialite',
   '/cookies',
