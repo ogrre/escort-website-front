@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { api } from '../lib/api';
+import { getAuthNotice } from '../lib/auth-feedback';
 import { useCopy } from '../lib/i18n';
 
 const props = defineProps<{ mode: 'register' | 'login' }>();
@@ -10,11 +11,6 @@ const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
 const error = ref('');
-const notice = ref(
-  props.mode === 'login' && route.query.registered
-    ? 'Compte créé. Vérifiez votre e-mail, puis connectez-vous.'
-    : '',
-);
 const errors = ref<Record<string, string[]>>({});
 const form = reactive({
   name: '',
@@ -28,6 +24,17 @@ const isRegister = computed(() => props.mode === 'register');
 const isAdvertiser = computed(() => form.role === 'advertiser');
 const { locale } = useCopy({ fr: 'fr', en: 'en' });
 const english = computed(() => locale.value === 'en');
+const notice = computed(() =>
+  props.mode === 'login'
+    ? getAuthNotice(
+        {
+          registered: Boolean(route.query.registered),
+          verified: Boolean(route.query.verified),
+        },
+        locale.value,
+      )
+    : '',
+);
 const title = computed(() => {
   if (!isRegister.value) return english.value ? 'Log in' : 'Se connecter';
   return isAdvertiser.value
