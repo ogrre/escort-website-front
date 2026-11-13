@@ -107,6 +107,13 @@ async function loadListings() {
   const params: Record<string, string> = { sort: 'boosted' };
   if (query.value) params.search = query.value;
   if (selectedCity.value) params.city = selectedCity.value;
+  if (query.value) {
+    params.q = query.value;
+    delete params.search;
+  }
+  if (selectedGender.value) params.gender = selectedGender.value;
+  if (selectedVerified.value) params.verified = '1';
+  if (selectedVideo.value) params.has_video = '1';
   await store.search(params);
 }
 watch(
@@ -251,6 +258,7 @@ onMounted(async () => {
         />
       </div>
       <p v-else class="v2-empty">{{ copy.empty }}</p>
+      <p v-if="store.error" class="v2-empty">{{ store.error }}</p>
     </section>
   </main>
 </template>
