@@ -12,6 +12,7 @@ export interface ApiLocation {
 export interface City {
   city: string;
   country: string;
+  slug?: string;
   listings_count?: number;
 }
 
@@ -31,6 +32,7 @@ export function normalizeLocations(items: ApiLocation[]): City[] {
   const locations = items
     .map((item) => ({
       city: (item.city ?? item.name ?? '').trim(),
+      slug: item.slug?.trim(),
       country:
         typeof item.country === 'string'
           ? item.country.trim()

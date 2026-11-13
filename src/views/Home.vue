@@ -87,7 +87,7 @@ const visibleListings = computed(() =>
 );
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
 function selectCity(city: City) {
-  selectedCity.value = city.city;
+  selectedCity.value = city.slug ?? city.city;
   aroundMe.value = false;
   coordinates.value = null;
   submitSearch();
@@ -114,6 +114,19 @@ function syncFilters() {
   selectedVerified.value = route.query.verified === '1';
   selectedVideo.value = route.query.video === '1';
   aroundMe.value = route.query.around_me === '1';
+}
+function normalizeCityFilter() {
+  if (!selectedCity.value) return;
+  const normalized = selectedCity.value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+  const city = cityOptions.value.find(
+    (option) =>
+      option.slug === selectedCity.value ||
+      option.city.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase() === normalized,
+  );
+  if (city?.slug) selectedCity.value = city.slug;
 }
 async function loadListings() {
   const params: Record<string, string> = { sort: 'boosted' };
@@ -181,7 +194,6 @@ onMounted(async () => {
         async () => (await api.get('/locations', { params: { has_listings: 1 } })).data.data,
         300_000,
       ),
-      loadListings(),
     ]);
     majorCities.value = normalizeLocations(major as ApiLocation[]);
     const majorNames = new Set(
@@ -201,6 +213,8 @@ onMounted(async () => {
             .toLowerCase(),
         ),
     );
+    normalizeCityFilter();
+    await loadListings();
     requestBrowserLocation();
   } finally {
     loadingCities.value = false;
@@ -223,7 +237,7 @@ onMounted(async () => {
           :key="city.city"
           type="button"
           class="v2-city-card"
-          :class="{ active: selectedCity === city.city && !aroundMe }"
+          :class="{ active: selectedCity === (city.slug ?? city.city) && !aroundMe }"
           @click="selectCity(city)"
         >
           <strong>{{ city.city }}</strong>
@@ -237,7 +251,7 @@ onMounted(async () => {
             v-for="city in otherCities"
             :key="city.city"
             type="button"
-            :class="{ active: selectedCity === city.city && !aroundMe }"
+          :class="{ active: selectedCity === (city.slug ?? city.city) && !aroundMe }"
             @click="selectCity(city)"
             >{{ city.city }} <small>{{ city.listings_count }}</small></button
           >
@@ -250,7 +264,7 @@ onMounted(async () => {
         <input v-model="query" :placeholder="copy.query" autocomplete="off" />
         <select v-model="selectedCity">
           <option value="">{{ copy.allCities }}</option>
-          <option v-for="city in cityOptions" :key="city.city" :value="city.city">
+          <option v-for="city in cityOptions" :key="city.slug ?? city.city" :value="city.slug ?? city.city">
             {{ city.city }}
           </option>
         </select>
