@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { api } from '../lib/api';
 import ListingPhotoManager, { type ListingPhoto } from '../components/ListingPhotoManager.vue';
 import { useCopy } from '../lib/i18n';
@@ -20,6 +20,9 @@ const copy = computed(() =>
         ageTitle: 'Age confirmation required',
         ageText: 'I confirm that I am 18 or older and authorised to publish this type of content.',
         ageStart: 'Start age verification',
+        ageWaiting:
+          'Verification opened. Complete it in the Yoti tab; this page will update automatically.',
+        ageSuccess: 'Your age has been verified. You can now publish your listing.',
         details: 'Profile details',
         about: 'Tell visitors about your profile',
         display: 'Display name',
@@ -52,6 +55,9 @@ const copy = computed(() =>
         ageText:
           'Je confirme avoir 18 ans ou plus et être autorisé(e) à publier ce type de contenu.',
         ageStart: 'Démarrer la vérification d’âge',
+        ageWaiting:
+          'La vérification est ouverte. Terminez-la dans l’onglet Yoti ; cette page se mettra à jour automatiquement.',
+        ageSuccess: 'Votre âge a été vérifié. Vous pouvez maintenant publier votre annonce.',
         details: 'Détails du profil',
         about: 'Présentez votre profil aux visiteurs',
         display: 'Nom affiché',
@@ -84,6 +90,7 @@ const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
+let agePolling: ReturnType<typeof setInterval> | null = null;
 const form = reactive({
   name: '',
   description: '',
@@ -156,12 +163,41 @@ async function startAgeVerification() {
       { headers: headers() },
     );
     window.open(response.data.verification_url, '_blank', 'noopener,noreferrer');
-    message.value = 'Vérification ouverte dans un nouvel onglet. Revenez ici une fois terminée.';
+    message.value = copy.value.ageWaiting;
+    startAgePolling();
   } catch {
     message.value = 'La confirmation d’âge n’a pas pu être enregistrée.';
   } finally {
     confirmingAge.value = false;
   }
+}
+
+function stopAgePolling() {
+  if (agePolling !== null) {
+    clearInterval(agePolling);
+    agePolling = null;
+  }
+}
+
+async function refreshAgeStatus() {
+  try {
+    const response = await api.get('/auth/me', { headers: headers() });
+    const confirmed = Boolean(response.data.age_confirmed);
+    ageConfirmed.value = confirmed;
+    if (confirmed) {
+      localStorage.setItem('user', JSON.stringify(response.data));
+      message.value = copy.value.ageSuccess;
+      stopAgePolling();
+    }
+  } catch {
+    // Keep the current dashboard state while the verification is pending.
+  }
+}
+
+function startAgePolling() {
+  stopAgePolling();
+  void refreshAgeStatus();
+  agePolling = setInterval(() => void refreshAgeStatus(), 3000);
 }
 async function publish() {
   if (!listingId.value) return;
@@ -187,10 +223,15 @@ onMounted(async () => {
     }
 
     for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
+    if (new URLSearchParams(window.location.search).has('sessionId')) {
+      startAgePolling();
+    }
   } catch {
     message.value = 'Connectez-vous pour gérer vos annonces.';
   }
 });
+
+onBeforeUnmount(stopAgePolling);
 </script>
 
 <template>
