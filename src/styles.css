@@ -469,6 +469,10 @@ body {
   gap: 8px;
 }
 .v2-city-card {
+  width: 100%;
+  appearance: none;
+  text-align: left;
+  font: inherit;
   display: block;
   border: 1px solid var(--v2-border);
   border-radius: 9px;
@@ -481,6 +485,11 @@ body {
   border-color: var(--v2-pink);
   background: #543348;
   transform: translateY(-2px);
+}
+.v2-city-card.active,
+.v2-city-inline button.active {
+  border-color: var(--v2-pink);
+  background: #543348;
 }
 .v2-city-card strong,
 .v2-city-card small {
@@ -499,15 +508,20 @@ body {
   flex-wrap: wrap;
   gap: 8px;
 }
-.v2-city-inline a {
+.v2-city-inline a,
+.v2-city-inline button {
+  appearance: none;
+  font: inherit;
   border: 1px solid #61455a;
   border-radius: 40px;
   background: #302631;
   color: #f4dce7;
   padding: 8px 12px;
   font-size: 12px;
+  cursor: pointer;
 }
-.v2-city-inline a:hover {
+.v2-city-inline a:hover,
+.v2-city-inline button:hover {
   border-color: var(--v2-pink);
   background: #543348;
 }

@@ -5,11 +5,16 @@ import Dashboard from './views/Dashboard.vue';
 import Admin from './views/Admin.vue';
 import Login from './views/Login.vue';
 import Register from './views/Register.vue';
-import CityLanding from './views/CityLanding.vue';
 import Legal from './views/Legal.vue';
 export const routes = [
   { path: '/', component: Home },
-  { path: '/cities/:city', component: CityLanding },
+  {
+    path: '/cities/:city',
+    redirect: (to: { params: Record<string, string | string[]> }) => ({
+      path: '/',
+      query: { city: String(to.params.city) },
+    }),
+  },
   { path: '/:city/:id', component: Profile },
   { path: '/dashboard', component: Dashboard },
   { path: '/profile', redirect: '/dashboard' },

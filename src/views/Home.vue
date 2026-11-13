@@ -19,6 +19,8 @@ const selectedCity = ref('');
 const selectedGender = ref('');
 const selectedVerified = ref(false);
 const selectedVideo = ref(false);
+const aroundMe = ref(false);
+const coordinates = ref<{ lat: number; lng: number } | null>(null);
 const majorCities = ref<City[]>([]);
 const otherCities = ref<City[]>([]);
 const loadingCities = ref(true);
@@ -84,8 +86,11 @@ const visibleListings = computed(() =>
     .slice(0, 8),
 );
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
-function cityPath(city: City) {
-  return `/cities/${encodeURIComponent(city.city)}`;
+function selectCity(city: City) {
+  selectedCity.value = city.city;
+  aroundMe.value = false;
+  coordinates.value = null;
+  submitSearch();
 }
 function submitSearch() {
   const params = new window.URLSearchParams();
@@ -94,6 +99,12 @@ function submitSearch() {
   if (selectedGender.value) params.set('gender', selectedGender.value);
   if (selectedVerified.value) params.set('verified', '1');
   if (selectedVideo.value) params.set('video', '1');
+  if (aroundMe.value && coordinates.value) {
+    params.set('around_me', '1');
+    params.set('lat', String(coordinates.value.lat));
+    params.set('lng', String(coordinates.value.lng));
+    params.set('radius', '25');
+  }
   router.push(`/${params.toString() ? `?${params.toString()}` : ''}`);
 }
 function syncFilters() {
@@ -102,6 +113,7 @@ function syncFilters() {
   selectedGender.value = String(route.query.gender ?? '');
   selectedVerified.value = route.query.verified === '1';
   selectedVideo.value = route.query.video === '1';
+  aroundMe.value = route.query.around_me === '1';
 }
 async function loadListings() {
   const params: Record<string, string> = { sort: 'boosted' };
@@ -114,7 +126,32 @@ async function loadListings() {
   if (selectedGender.value) params.gender = selectedGender.value;
   if (selectedVerified.value) params.verified = '1';
   if (selectedVideo.value) params.has_video = '1';
+  if (aroundMe.value && coordinates.value) {
+    params.around_me = '1';
+    params.lat = String(coordinates.value.lat);
+    params.lng = String(coordinates.value.lng);
+    params.radius = '25';
+  }
   await store.search(params);
+}
+function requestBrowserLocation() {
+  if (!navigator.geolocation || route.query.city || route.query.around_me) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      coordinates.value = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      aroundMe.value = true;
+      selectedCity.value = '';
+      void loadListings();
+    },
+    () => {
+      // Paris remains the predictable default when location access is refused.
+    },
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 300_000 },
+  );
 }
 watch(
   () => route.fullPath,
@@ -125,6 +162,7 @@ watch(
 );
 onMounted(async () => {
   syncFilters();
+  if (!route.query.city && !route.query.around_me) selectedCity.value = 'Paris';
   setSeo({
     title: 'Élégance — Profils vérifiés près de chez vous',
     description: 'Trouvez rapidement des profils et annonces disponibles dans votre ville.',
@@ -163,6 +201,7 @@ onMounted(async () => {
             .toLowerCase(),
         ),
     );
+    requestBrowserLocation();
   } finally {
     loadingCities.value = false;
   }
@@ -179,20 +218,28 @@ onMounted(async () => {
         <span v-for="n in 8" :key="n" class="v2-skeleton"></span>
       </div>
       <div v-else class="v2-city-grid">
-        <RouterLink
+        <button
           v-for="city in majorCities"
           :key="city.city"
-          :to="cityPath(city)"
+          type="button"
           class="v2-city-card"
-          ><strong>{{ city.city }}</strong
-          ><small>{{ city.listings_count }} {{ copy.profiles }}</small></RouterLink
+          :class="{ active: selectedCity === city.city && !aroundMe }"
+          @click="selectCity(city)"
         >
+          <strong>{{ city.city }}</strong>
+          <small>{{ city.listings_count }} {{ copy.profiles }}</small>
+          </button>
       </div>
       <div v-if="otherCities.length" class="v2-other-cities">
         <h3>{{ copy.nearby }}</h3>
         <div class="v2-city-inline">
-          <RouterLink v-for="city in otherCities" :key="city.city" :to="cityPath(city)"
-            >{{ city.city }} <small>{{ city.listings_count }}</small></RouterLink
+          <button
+            v-for="city in otherCities"
+            :key="city.city"
+            type="button"
+            :class="{ active: selectedCity === city.city && !aroundMe }"
+            @click="selectCity(city)"
+            >{{ city.city }} <small>{{ city.listings_count }}</small></button
           >
         </div>
       </div>
