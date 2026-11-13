@@ -68,9 +68,19 @@ const copy = computed(() =>
 );
 const visibleListings = computed(() =>
   store.listings
-    .filter((listing) => !selectedGender.value || listing.gender === selectedGender.value)
+    .filter(
+      (listing) =>
+        !selectedGender.value ||
+        listing.gender === selectedGender.value ||
+        (listing.tags ?? []).includes(selectedGender.value),
+    )
     .filter((listing) => !selectedVerified.value || listing.verified)
-    .filter((listing) => !selectedVideo.value || listing.has_video)
+    .filter(
+      (listing) =>
+        !selectedVideo.value ||
+        listing.has_video === true ||
+        (listing.tags ?? []).includes('video'),
+    )
     .slice(0, 8),
 );
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
