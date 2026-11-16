@@ -19,6 +19,11 @@ const selectedCity = ref('');
 const selectedGender = ref('');
 const selectedVerified = ref(false);
 const selectedVideo = ref(false);
+const selectedAgeMin = ref('');
+const selectedAgeMax = ref('');
+const selectedSort = ref('recommended');
+const selectedRadius = ref('25');
+const currentPage = ref(1);
 const aroundMe = ref(false);
 const coordinates = ref<{ lat: number; lng: number } | null>(null);
 const majorCities = ref<City[]>([]);
@@ -40,6 +45,16 @@ const copy = computed(() =>
         women: 'Filles',
         men: 'Hommes',
         trans: 'Trans / TV',
+        age: 'Âge',
+        minAge: 'Âge min.',
+        maxAge: 'Âge max.',
+        sort: 'Trier par',
+        recommended: 'Recommandés',
+        newest: 'Plus récents',
+        mostViewed: 'Plus vus',
+        lastOnline: 'Dernière activité',
+        around: 'Autour de moi',
+        radius: 'Rayon',
         popular: 'Les principales villes',
         nearby: 'Autres villes avec annonces',
         profiles: 'profils',
@@ -60,6 +75,16 @@ const copy = computed(() =>
         women: 'Women',
         men: 'Men',
         trans: 'Trans / TV',
+        age: 'Age',
+        minAge: 'Min age',
+        maxAge: 'Max age',
+        sort: 'Sort by',
+        recommended: 'Recommended',
+        newest: 'Newest',
+        mostViewed: 'Most viewed',
+        lastOnline: 'Last online',
+        around: 'Around me',
+        radius: 'Radius',
         popular: 'Major cities',
         nearby: 'Other cities with listings',
         profiles: 'profiles',
@@ -82,8 +107,7 @@ const visibleListings = computed(() =>
         !selectedVideo.value ||
         listing.has_video === true ||
         (listing.tags ?? []).includes('video'),
-    )
-    .slice(0, 8),
+    ),
 );
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
 function selectCity(city: City) {
@@ -99,11 +123,15 @@ function submitSearch() {
   if (selectedGender.value) params.set('gender', selectedGender.value);
   if (selectedVerified.value) params.set('verified', '1');
   if (selectedVideo.value) params.set('video', '1');
+  if (selectedAgeMin.value) params.set('age_min', selectedAgeMin.value);
+  if (selectedAgeMax.value) params.set('age_max', selectedAgeMax.value);
+  if (selectedSort.value) params.set('sort', selectedSort.value);
+  if (currentPage.value > 1) params.set('page', String(currentPage.value));
   if (aroundMe.value && coordinates.value) {
     params.set('around_me', '1');
     params.set('lat', String(coordinates.value.lat));
     params.set('lng', String(coordinates.value.lng));
-    params.set('radius', '25');
+    params.set('radius', selectedRadius.value);
   }
   router.push(`/${params.toString() ? `?${params.toString()}` : ''}`);
 }
@@ -113,6 +141,11 @@ function syncFilters() {
   selectedGender.value = String(route.query.gender ?? '');
   selectedVerified.value = route.query.verified === '1';
   selectedVideo.value = route.query.video === '1';
+  selectedAgeMin.value = String(route.query.age_min ?? '');
+  selectedAgeMax.value = String(route.query.age_max ?? '');
+  selectedSort.value = String(route.query.sort ?? 'recommended');
+  selectedRadius.value = String(route.query.radius ?? '25');
+  currentPage.value = Math.max(Number(route.query.page ?? 1) || 1, 1);
   aroundMe.value = route.query.around_me === '1';
 }
 function normalizeCityFilter() {
@@ -124,33 +157,44 @@ function normalizeCityFilter() {
   const city = cityOptions.value.find(
     (option) =>
       option.slug === selectedCity.value ||
-      option.city.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase() === normalized,
+      option.city
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase() === normalized,
   );
   if (city?.slug) selectedCity.value = city.slug;
 }
 async function loadListings() {
-  const params: Record<string, string> = { sort: 'boosted' };
-  if (query.value) params.search = query.value;
+  const params: Record<string, string> = {
+    sort: selectedSort.value,
+    page: String(currentPage.value),
+  };
   if (selectedCity.value) params.city = selectedCity.value;
-  if (query.value) {
-    params.q = query.value;
-    delete params.search;
-  }
+  if (query.value) params.q = query.value;
   if (selectedGender.value) params.gender = selectedGender.value;
   if (selectedVerified.value) params.verified = '1';
   if (selectedVideo.value) params.has_video = '1';
+  if (selectedAgeMin.value) params.age_min = selectedAgeMin.value;
+  if (selectedAgeMax.value) params.age_max = selectedAgeMax.value;
   if (aroundMe.value && coordinates.value) {
     params.around_me = '1';
     params.lat = String(coordinates.value.lat);
     params.lng = String(coordinates.value.lng);
-    params.radius = '25';
+    params.radius = selectedRadius.value;
   }
   await store.search(params);
+  if (!store.listings.length && selectedCity.value) {
+    const city = cityOptions.value.find((option) => option.slug === selectedCity.value);
+    if (city && city.city !== selectedCity.value) {
+      await store.search({ ...params, city: city.city });
+    }
+  }
 }
-function requestBrowserLocation() {
-  if (!navigator.geolocation || route.query.city || route.query.around_me) return;
+function requestBrowserLocation(force = false) {
+  const geolocation = globalThis.navigator?.geolocation;
+  if (!geolocation || (!force && (route.query.city || route.query.around_me))) return;
 
-  navigator.geolocation.getCurrentPosition(
+  geolocation.getCurrentPosition(
     (position) => {
       coordinates.value = {
         lat: position.coords.latitude,
@@ -158,6 +202,7 @@ function requestBrowserLocation() {
       };
       aroundMe.value = true;
       selectedCity.value = '';
+      currentPage.value = 1;
       void loadListings();
     },
     () => {
@@ -165,6 +210,11 @@ function requestBrowserLocation() {
     },
     { enableHighAccuracy: false, timeout: 5000, maximumAge: 300_000 },
   );
+}
+function goToPage(page: number) {
+  if (page < 1 || page > store.pagination.pages || page === currentPage.value) return;
+  currentPage.value = page;
+  submitSearch();
 }
 watch(
   () => route.fullPath,
@@ -242,7 +292,7 @@ onMounted(async () => {
         >
           <strong>{{ city.city }}</strong>
           <small>{{ city.listings_count }} {{ copy.profiles }}</small>
-          </button>
+        </button>
       </div>
       <div v-if="otherCities.length" class="v2-other-cities">
         <h3>{{ copy.nearby }}</h3>
@@ -251,20 +301,30 @@ onMounted(async () => {
             v-for="city in otherCities"
             :key="city.city"
             type="button"
-          :class="{ active: selectedCity === (city.slug ?? city.city) && !aroundMe }"
+            :class="{ active: selectedCity === (city.slug ?? city.city) && !aroundMe }"
             @click="selectCity(city)"
-            >{{ city.city }} <small>{{ city.listings_count }}</small></button
           >
+            {{ city.city }} <small>{{ city.listings_count }}</small>
+          </button>
         </div>
       </div>
     </section>
     <section class="v2-search-panel v4-quick-search" aria-labelledby="quick-search-title">
-      <h3 id="quick-search-title">Recherche rapide</h3>
+      <div class="v2-filter-heading">
+        <h3 id="quick-search-title">{{ copy.search }}</h3>
+        <button type="button" class="v2-chip" @click="requestBrowserLocation(true)">
+          ◎ {{ copy.around }}
+        </button>
+      </div>
       <form class="v2-search-row" @submit.prevent="submitSearch">
         <input v-model="query" :placeholder="copy.query" autocomplete="off" />
         <select v-model="selectedCity">
           <option value="">{{ copy.allCities }}</option>
-          <option v-for="city in cityOptions" :key="city.slug ?? city.city" :value="city.slug ?? city.city">
+          <option
+            v-for="city in cityOptions"
+            :key="city.slug ?? city.city"
+            :value="city.slug ?? city.city"
+          >
             {{ city.city }}
           </option>
         </select>
@@ -277,6 +337,33 @@ onMounted(async () => {
         </select>
         <button class="v2-button primary" type="submit">{{ copy.search }}</button>
       </form>
+      <div class="v2-filter-row">
+        <label>
+          <span>{{ copy.minAge }}</span>
+          <input v-model="selectedAgeMin" type="number" min="18" max="80" placeholder="18" />
+        </label>
+        <label>
+          <span>{{ copy.maxAge }}</span>
+          <input v-model="selectedAgeMax" type="number" min="18" max="80" placeholder="80" />
+        </label>
+        <label>
+          <span>{{ copy.sort }}</span>
+          <select v-model="selectedSort">
+            <option value="recommended">{{ copy.recommended }}</option>
+            <option value="newest">{{ copy.newest }}</option>
+            <option value="most_viewed">{{ copy.mostViewed }}</option>
+            <option value="last_online">{{ copy.lastOnline }}</option>
+          </select>
+        </label>
+        <label>
+          <span>{{ copy.radius }}</span>
+          <select v-model="selectedRadius">
+            <option value="25">25 km</option>
+            <option value="50">50 km</option>
+            <option value="100">100 km</option>
+          </select>
+        </label>
+      </div>
       <div class="v2-filter-chips">
         <button
           type="button"
@@ -294,7 +381,7 @@ onMounted(async () => {
         >
           ▶ Avec vidéo
         </button>
-        <button type="button" class="v2-chip" @click="submitSearch">{{ copy.allListings }}</button>
+        <button type="submit" class="v2-chip">{{ copy.allListings }}</button>
       </div>
     </section>
     <section class="v2-wrap v2-listings" aria-labelledby="listings-title">
@@ -320,6 +407,25 @@ onMounted(async () => {
       </div>
       <p v-else class="v2-empty">{{ copy.empty }}</p>
       <p v-if="store.error" class="v2-empty">{{ store.error }}</p>
+      <nav v-if="store.pagination.pages > 1" class="v2-pagination" aria-label="Pagination">
+        <button
+          type="button"
+          class="v2-chip"
+          :disabled="currentPage === 1"
+          @click="goToPage(currentPage - 1)"
+        >
+          ←
+        </button>
+        <span>{{ currentPage }} / {{ store.pagination.pages }}</span>
+        <button
+          type="button"
+          class="v2-chip"
+          :disabled="currentPage === store.pagination.pages"
+          @click="goToPage(currentPage + 1)"
+        >
+          →
+        </button>
+      </nav>
     </section>
   </main>
 </template>

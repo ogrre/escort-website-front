@@ -2,6 +2,13 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../lib/api';
 import { cachedRequest } from '../lib/request-cache';
+
+export interface ListingPagination {
+  page: number;
+  pages: number;
+  total: number;
+  limit: number;
+}
 export interface Listing {
   id: string;
   slug: string;
@@ -59,21 +66,32 @@ export const useListingsStore = defineStore('listings', () => {
   const listings = ref<Listing[]>([]);
   const loading = ref(false);
   const error = ref('');
+  const pagination = ref<ListingPagination>({ page: 1, pages: 1, total: 0, limit: 24 });
   async function search(params: Record<string, string> = {}) {
     loading.value = true;
     error.value = '';
     try {
-      const cacheKey = 'listings:' + JSON.stringify(params);
-      listings.value = await cachedRequest(
+      const cacheKey = 'listings:v2:' + JSON.stringify(params);
+      const result = await cachedRequest(
         cacheKey,
         async () => {
           const response = await api.get('/profiles/search', {
             params: { limit: 24, ...params },
           });
-          return (response.data.data as ProfileSearchResult[]).map(normalizeProfile);
+          return {
+            listings: (response.data.data as ProfileSearchResult[]).map(normalizeProfile),
+            meta: response.data.meta as Partial<ListingPagination> | undefined,
+          };
         },
         30_000,
       );
+      listings.value = result.listings;
+      pagination.value = {
+        page: result.meta?.page ?? 1,
+        pages: result.meta?.pages ?? 1,
+        total: result.meta?.total ?? result.listings.length,
+        limit: result.meta?.limit ?? 24,
+      };
     } catch {
       listings.value = [];
       error.value = 'Listings could not be loaded. Please try again.';
@@ -81,5 +99,5 @@ export const useListingsStore = defineStore('listings', () => {
       loading.value = false;
     }
   }
-  return { listings, loading, error, search };
+  return { listings, loading, error, pagination, search };
 });
