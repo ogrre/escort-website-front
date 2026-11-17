@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { api } from '../lib/api';
 import type { Listing } from '../stores/listings';
 import { useCopy } from '../lib/i18n';
+import { resolveMediaUrl } from '../lib/media';
 
 const route = useRoute();
 const { locale } = useCopy({ fr: 'fr', en: 'en' });
@@ -35,7 +36,10 @@ function normalizeListingDetail(payload: Record<string, any>): Listing {
 
   return {
     ...payload,
-    photos,
+    photos: photos.map((photo: { url?: string; [key: string]: unknown }) => ({
+      ...photo,
+      url: resolveMediaUrl(photo.url),
+    })),
     comments,
     services: Array.isArray(payload.services) ? payload.services : [],
     tags: Array.isArray(payload.tags) ? payload.tags : [],

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../lib/api';
 import { cachedRequest } from '../lib/request-cache';
+import { resolveMediaUrl } from '../lib/media';
 
 export interface ListingPagination {
   page: number;
@@ -45,7 +46,7 @@ interface ProfileSearchResult {
 }
 
 function normalizeProfile(profile: ProfileSearchResult): Listing {
-  const photoUrl = profile.main_photo?.thumbnail_url ?? profile.main_photo?.url;
+  const photoUrl = resolveMediaUrl(profile.main_photo?.thumbnail_url ?? profile.main_photo?.url);
   return {
     id: profile.id,
     slug: profile.slug,
