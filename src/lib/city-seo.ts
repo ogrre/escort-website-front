@@ -1,16 +1,24 @@
+export function normalizeSiteOrigin(origin: string): string {
+  return origin.replace(/\/+$/, '');
+}
+
+const runtimeSiteOrigin = normalizeSiteOrigin(
+  import.meta.env.VITE_SITE_ORIGIN ?? globalThis.location?.origin ?? 'http://localhost:5173',
+);
+
 export function cityCanonical(
   locale: 'fr' | 'en',
   slug: string,
-  origin = window.location.origin,
+  origin = runtimeSiteOrigin,
 ): string {
-  return `${origin}/${locale}/${locale === 'fr' ? 'villes' : 'cities'}/${encodeURIComponent(slug)}`;
+  return `${normalizeSiteOrigin(origin)}/${locale}/${locale === 'fr' ? 'villes' : 'cities'}/${encodeURIComponent(slug)}`;
 }
 
 export function citySeoMetadata(
   locale: 'fr' | 'en',
   city: { name: string; slug: string },
   filters: Record<string, unknown> = {},
-  origin = globalThis.location?.origin ?? 'http://localhost:5173',
+  origin = runtimeSiteOrigin,
 ) {
   const english = locale === 'en';
   return {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { routes } from '../src/router';
+import { cityPath, citySearchPath } from '../src/lib/city-links';
 
 const publicPaths = [
   '/',
@@ -53,5 +54,21 @@ describe('public route rendering', () => {
         params: { citySlug: 'bordeaux-33063' },
       }),
     ).toBe('/fr/villes/bordeaux-33063');
+  });
+
+  it('builds locale-aware city links from official slugs', () => {
+    expect(cityPath('fr', 'bordeaux-33063')).toBe('/fr/villes/bordeaux-33063');
+    expect(cityPath('en', 'bordeaux-33063')).toBe('/en/cities/bordeaux-33063');
+    expect(cityPath('fr', 'orleans-45234')).not.toContain('Orleans');
+    expect(cityPath('en', 'bordeaux 33063')).toBe('/en/cities/bordeaux%2033063');
+  });
+
+  it('keeps the active locale when submitting a selected city search', () => {
+    expect(citySearchPath('fr', 'bordeaux-33063', { gender: 'femme' })).toBe(
+      '/fr/villes/bordeaux-33063?gender=femme',
+    );
+    expect(citySearchPath('en', 'bordeaux-33063', { gender: 'femme' })).toBe(
+      '/en/cities/bordeaux-33063?gender=femme',
+    );
   });
 });

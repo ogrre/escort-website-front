@@ -1,14 +1,17 @@
+import { normalizeSiteOrigin } from './city-seo';
+
 export interface SitemapCity {
   slug: string;
   listings_count: number;
 }
 
 export function citySitemapUrls(cities: SitemapCity[], origin: string): string[] {
+  const siteOrigin = normalizeSiteOrigin(origin);
   return cities
     .filter((city) => city.listings_count > 0)
     .flatMap((city) => [
-      `${origin}/fr/villes/${encodeURIComponent(city.slug)}`,
-      `${origin}/en/cities/${encodeURIComponent(city.slug)}`,
+      `${siteOrigin}/fr/villes/${encodeURIComponent(city.slug)}`,
+      `${siteOrigin}/en/cities/${encodeURIComponent(city.slug)}`,
     ]);
 }
 

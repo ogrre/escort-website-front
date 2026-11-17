@@ -26,6 +26,9 @@ describe('profile search contract', () => {
     expect(cityCanonical('fr', 'bordeaux-33063', 'http://localhost:5173')).toBe(
       'http://localhost:5173/fr/villes/bordeaux-33063',
     );
+    expect(cityCanonical('en', 'paris-75056', 'https://example.com/')).toBe(
+      'https://example.com/en/cities/paris-75056',
+    );
   });
 
   it('marks filtered city pages noindex and clean city pages index', () => {

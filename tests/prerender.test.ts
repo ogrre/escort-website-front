@@ -3,6 +3,7 @@ import {
   cityMetadata,
   cityPath,
   citySeoMetadata,
+  normalizeSiteOrigin,
   renderCityContent,
 } from '../scripts/prerender-cities.mjs';
 import { citySitemapUrls } from '../src/lib/sitemap';
@@ -20,6 +21,12 @@ describe('city prerender contract', () => {
       title: 'Profils à Bordeaux | Élégance',
       description: 'Découvrez les profils et annonces disponibles à Bordeaux.',
       canonical: 'http://localhost:5173/fr/villes/bordeaux-33063',
+    });
+    expect(cityMetadata('fr', city, 'https://example.com/')).toMatchObject({
+      canonical: 'https://example.com/fr/villes/bordeaux-33063',
+    });
+    expect(cityMetadata('en', city, 'https://example.com/')).toMatchObject({
+      canonical: 'https://example.com/en/cities/bordeaux-33063',
     });
     const html = renderCityContent('fr', city, [
       { id: 'profile-uuid', pseudo: 'Ana', age: 28, city: { name: 'Bordeaux' } },
@@ -46,5 +53,16 @@ describe('city prerender contract', () => {
       'https://example.com/en/cities/bordeaux-33063',
     ]);
     expect(urls.join('\n')).not.toContain('?');
+    expect(citySitemapUrls([city], 'https://example.com/')).toEqual([
+      'https://example.com/fr/villes/bordeaux-33063',
+      'https://example.com/en/cities/bordeaux-33063',
+    ]);
+  });
+
+  it('uses the localhost fallback and removes trailing slashes', () => {
+    expect(normalizeSiteOrigin('http://localhost:5173///')).toBe('http://localhost:5173');
+    expect(
+      cityMetadata('fr', city, normalizeSiteOrigin('http://localhost:5173///')).canonical,
+    ).toBe('http://localhost:5173/fr/villes/bordeaux-33063');
   });
 });

@@ -9,6 +9,7 @@ import { localeKey, type Locale } from '../lib/locale';
 import { setSeo } from '../lib/seo';
 import { useListingsStore } from '../stores/listings';
 import { profileApiParams, readProfileFilters } from '../lib/profile-search';
+import { cityPath as buildCityPath, citySearchPath } from '../lib/city-links';
 
 const router = useRouter();
 const route = useRoute();
@@ -67,7 +68,7 @@ const copy = computed(() =>
 const visibleListings = computed(() => store.listings.slice(0, 8));
 const cityOptions = computed(() => [...majorCities.value, ...otherCities.value]);
 function cityPath(city: City) {
-  return `/fr/villes/${encodeURIComponent(city.slug)}`;
+  return buildCityPath(locale.value, city.slug);
 }
 function submitSearch() {
   const params = new window.URLSearchParams();
@@ -75,7 +76,10 @@ function submitSearch() {
   if (selectedGender.value) params.set('gender', selectedGender.value);
   if (selectedCity.value) {
     router.push(
-      `/fr/villes/${encodeURIComponent(selectedCity.value)}${params.toString() ? `?${params}` : ''}`,
+      citySearchPath(locale.value, selectedCity.value, {
+        q: query.value.trim() || undefined,
+        gender: selectedGender.value || undefined,
+      }),
     );
   } else {
     router.replace({

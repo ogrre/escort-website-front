@@ -1,26 +1,37 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const apiBase = (process.env.VITE_API_URL || 'http://localhost:8081/api/v1').replace(/\/$/, '');
-const siteOrigin = (process.env.VITE_SITE_ORIGIN || 'http://localhost:5173').replace(/\/$/, '');
+export function normalizeSiteOrigin(origin) {
+  return origin.replace(/\/+$/, '');
+}
+
+const apiBase = normalizeSiteOrigin(process.env.VITE_API_URL || 'http://localhost:8081/api/v1');
+const siteOrigin = normalizeSiteOrigin(process.env.VITE_SITE_ORIGIN || 'http://localhost:5173');
 const distRoot = resolve(process.cwd(), 'dist');
 
 export function cityPath(locale, slug) {
   return `/${locale}/${locale === 'fr' ? 'villes' : 'cities'}/${encodeURIComponent(slug)}`;
 }
 
-export function cityMetadata(locale, city) {
+export function cityMetadata(locale, city, origin = siteOrigin) {
   const name =
     locale === 'fr' ? `Profils à ${city.name} | Élégance` : `Profiles in ${city.name} | Élégance`;
   const description =
     locale === 'fr'
       ? `Découvrez les profils et annonces disponibles à ${city.name}.`
       : `Discover profiles and listings available in ${city.name}.`;
-  return { title: name, description, canonical: `${siteOrigin}${cityPath(locale, city.slug)}` };
+  return {
+    title: name,
+    description,
+    canonical: `${normalizeSiteOrigin(origin)}${cityPath(locale, city.slug)}`,
+  };
 }
 
-export function citySeoMetadata(locale, city, hasQuery = false) {
-  return { ...cityMetadata(locale, city), robots: hasQuery ? 'noindex,follow' : 'index,follow' };
+export function citySeoMetadata(locale, city, hasQuery = false, origin = siteOrigin) {
+  return {
+    ...cityMetadata(locale, city, origin),
+    robots: hasQuery ? 'noindex,follow' : 'index,follow',
+  };
 }
 
 export function renderCityContent(locale, city, profiles) {
@@ -88,7 +99,7 @@ function replaceMeta(html, selector, tag) {
 }
 
 function applyMetadata(html, locale, city) {
-  const metadata = citySeoMetadata(locale, city);
+  const metadata = citySeoMetadata(locale, city, false, siteOrigin);
   let result = html.replace(/<html lang="[^"]*">/i, `<html lang="${locale}">`);
   result = result.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(metadata.title)}</title>`);
   result = replaceMeta(
