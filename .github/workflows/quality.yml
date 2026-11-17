@@ -71,6 +71,9 @@ jobs:
         run: npm run typecheck
 
       - name: Build frontend
+        env:
+          VITE_SITE_ORIGIN: https://example.com
+          PRERENDER_SKIP: '1'
         run: npm run build
 
   promotion-policy:
