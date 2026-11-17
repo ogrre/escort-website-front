@@ -195,9 +195,10 @@ async function publish() {
 onMounted(async () => {
   try {
     const userResponse = await api.get('/auth/me', { headers: headers() });
-    isAdvertiser.value = userResponse.data.role === 'advertiser';
-    ageConfirmed.value = Boolean(userResponse.data.age_confirmed);
-    localStorage.setItem('user', JSON.stringify(userResponse.data));
+    const user = userResponse.data.data ?? userResponse.data;
+    isAdvertiser.value = user.role === 'advertiser';
+    ageConfirmed.value = Boolean(user.age_confirmed);
+    localStorage.setItem('user', JSON.stringify(user));
     if (!isAdvertiser.value) {
       message.value = english.value
         ? 'This space is reserved for advertiser accounts.'
