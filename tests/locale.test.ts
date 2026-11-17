@@ -1,32 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { getInitialLocale } from '../src/lib/locale';
 
 describe('locale selection', () => {
   beforeEach(() => {
     const values = new Map<string, string>();
 
-    vi.stubGlobal('localStorage', {
-      clear: () => values.clear(),
-      getItem: (key: string) => values.get(key) ?? null,
-      removeItem: (key: string) => values.delete(key),
-      setItem: (key: string, value: string) => values.set(key, value),
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        clear: () => values.clear(),
+        getItem: (key: string) => values.get(key) ?? null,
+        removeItem: (key: string) => values.delete(key),
+        setItem: (key: string, value: string) => values.set(key, value),
+      },
     });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    Reflect.deleteProperty(globalThis, 'localStorage');
   });
 
   it('keeps an explicit visitor choice', () => {
-    localStorage.setItem('locale', 'fr');
+    globalThis.localStorage.setItem('locale', 'fr');
 
     expect(getInitialLocale()).toBe('fr');
   });
 
   it('uses the browser language when no choice is saved', () => {
-    Object.defineProperty(navigator, 'language', {
+    Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
-      value: 'en-US',
+      value: { language: 'en-US' },
     });
 
     expect(getInitialLocale()).toBe('en');

@@ -1,6 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 import Home from './views/Home.vue';
-import Search from './views/Search.vue';
 import Profile from './views/Profile.vue';
 import Dashboard from './views/Dashboard.vue';
 import Admin from './views/Admin.vue';
@@ -10,10 +9,15 @@ import CityLanding from './views/CityLanding.vue';
 import Legal from './views/Legal.vue';
 export const routes = [
   { path: '/', component: Home },
-  { path: '/search', component: Search },
-  { path: '/recherche', redirect: '/search' },
-  { path: '/cities/:city', component: CityLanding },
-  { path: '/:city/:id', component: Profile },
+  { path: '/fr/villes/:citySlug', component: CityLanding, props: { locale: 'fr' } },
+  { path: '/en/cities/:citySlug', component: CityLanding, props: { locale: 'en' } },
+  { path: '/fr/profil/:uuid', component: Profile, props: { locale: 'fr' } },
+  { path: '/en/profile/:uuid', component: Profile, props: { locale: 'en' } },
+  {
+    path: '/cities/:citySlug',
+    redirect: (to: { params: Record<string, string | string[]> }) =>
+      `/fr/villes/${to.params.citySlug}`,
+  },
   { path: '/dashboard', component: Dashboard },
   { path: '/profile', redirect: '/dashboard' },
   { path: '/login', component: Login },
@@ -27,6 +31,6 @@ export const routes = [
 ];
 
 export default createRouter({
-  history: createWebHistory(),
+  history: typeof window === 'undefined' ? createMemoryHistory() : createWebHistory(),
   routes,
 });

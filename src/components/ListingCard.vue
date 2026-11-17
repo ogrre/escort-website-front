@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import type { Listing } from '../stores/listings';
 defineProps<{ listing: Listing; index?: number }>();
+const route = useRoute();
+const profilePrefix = computed(() =>
+  route.path.startsWith('/en/') ? '/en/profile' : '/fr/profil',
+);
 </script>
 
 <template>
   <article class="v2-listing-card">
-    <RouterLink
-      :to="`/${encodeURIComponent(listing.city)}/${encodeURIComponent(listing.slug)}`"
-      class="v2-listing-link"
-    >
+    <RouterLink :to="`${profilePrefix}/${encodeURIComponent(listing.id)}`" class="v2-listing-link">
       <div class="v2-listing-visual" :class="`alt${(index ?? 0) % 4}`">
         <img
           v-if="listing.photos[0]"
