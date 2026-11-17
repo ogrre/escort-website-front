@@ -84,6 +84,30 @@ const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
+const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'] as const;
+type ContactType = (typeof contactTypes)[number];
+type Contact = { enabled: boolean; value: string };
+type Contacts = Record<ContactType, Contact>;
+
+function createEmptyContacts(): Contacts {
+  return Object.fromEntries(
+    contactTypes.map((type) => [type, { enabled: false, value: '' }]),
+  ) as Contacts;
+}
+
+function normalizeContacts(
+  contacts: Partial<Record<ContactType, Partial<Contact>>> | null | undefined,
+): Contacts {
+  const defaults = createEmptyContacts();
+  for (const type of contactTypes) {
+    defaults[type] = {
+      ...defaults[type],
+      ...(contacts?.[type] ?? {}),
+    };
+  }
+  return defaults;
+}
+
 const form = reactive({
   name: '',
   description: '',
@@ -92,9 +116,8 @@ const form = reactive({
   country: 'FR',
   services: [] as string[],
   status_text: '',
-  contacts: {} as Record<string, { enabled: boolean; value: string }>,
+  contacts: createEmptyContacts(),
 });
-const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const labels: Record<string, string> = {
   phone: 'Téléphone',
   whatsapp: 'WhatsApp',
@@ -183,10 +206,9 @@ onMounted(async () => {
     if (data) {
       listingId.value = data.id;
       Object.assign(form, data);
+      form.contacts = normalizeContacts(data.contacts);
       photos.value = (data.photos ?? []) as ListingPhoto[];
     }
-
-    for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
   } catch {
     message.value = 'Connectez-vous pour gérer vos annonces.';
   }
