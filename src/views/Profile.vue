@@ -27,6 +27,21 @@ const visibleContacts = computed<[string, { enabled: boolean; value: string }][]
   ),
 );
 
+function normalizeListingDetail(payload: Record<string, any>): Listing {
+  const photos = Array.isArray(payload.photos) ? payload.photos : (payload.photos?.data ?? []);
+  const comments = Array.isArray(payload.comments)
+    ? payload.comments
+    : (payload.comments?.data ?? []);
+
+  return {
+    ...payload,
+    photos,
+    comments,
+    services: Array.isArray(payload.services) ? payload.services : [],
+    tags: Array.isArray(payload.tags) ? payload.tags : [],
+  } as Listing;
+}
+
 function contactHref(type: string, value: string): string {
   if (type === 'whatsapp') return `https://wa.me/${value.replace(/[^0-9]/g, '')}`;
   if (type === 'telegram') return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : value;
@@ -56,7 +71,8 @@ async function submitComment() {
 
 onMounted(async () => {
   try {
-    listing.value = (await api.get(`/listings/${route.params.id}`)).data.data;
+    const response = await api.get(`/listings/${route.params.id}`);
+    listing.value = normalizeListingDetail(response.data.data);
   } catch {
     error.value = english.value
       ? 'This profile is no longer available.'
