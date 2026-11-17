@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { routes } from '../src/router';
 import { cityPath, citySearchPath } from '../src/lib/city-links';
+import Directory from '../src/views/Directory.vue';
 
 const publicPaths = [
   '/',
@@ -39,6 +40,16 @@ describe('public route rendering', () => {
 
   it('redirects the legacy search route to the home search', () => {
     expect(routes.find((route) => route.path === '/search')?.redirect).toBe('/');
+  });
+
+  it('uses the same directory component for home and both city locales', () => {
+    expect(routes.find((route) => route.path === '/')?.component).toBe(Directory);
+    expect(routes.find((route) => route.path === '/fr/villes/:citySlug')?.component).toBe(
+      Directory,
+    );
+    expect(routes.find((route) => route.path === '/en/cities/:citySlug')?.component).toBe(
+      Directory,
+    );
   });
 
   it('never redirects a city display name into a city SEO route', () => {

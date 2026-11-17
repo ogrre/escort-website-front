@@ -20,6 +20,11 @@ describe('profile search contract', () => {
       has_video: '1',
     });
     expect(profileApiParams(filters)).not.toHaveProperty('video');
+    expect(profileApiParams({ gender: 'femme', has_video: '1' }, 'bordeaux-33063')).toMatchObject({
+      city: 'bordeaux-33063',
+      gender: 'femme',
+      has_video: '1',
+    });
   });
 
   it('uses the official city slug for canonical URLs', () => {

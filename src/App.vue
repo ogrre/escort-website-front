@@ -81,9 +81,6 @@ async function logout() {
       <nav class="v2-nav mx-auto flex w-full max-w-7xl items-center gap-4 px-5 py-4 lg:px-8">
         <RouterLink to="/" class="brand-mark" @click="mobileMenuOpen = false">ÉLÉGANCE</RouterLink>
         <div class="v2-header-actions" :class="{ open: mobileMenuOpen }">
-          <RouterLink to="/" class="v2-header-link" @click="mobileMenuOpen = false"
-            >Annonces</RouterLink
-          >
           <RouterLink
             v-if="isAuthenticated"
             to="/dashboard"
