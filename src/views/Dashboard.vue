@@ -87,6 +87,16 @@ const photos = ref<ListingPhoto[]>([]);
 const locations = ref<Array<{ id: string; name: string; country?: string }>>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
+const dashboardReady = ref(false);
+const isAdvertiser = ref(true);
+const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
+
+function emptyContacts() {
+  return Object.fromEntries(
+    contactTypes.map((type) => [type, { enabled: false, value: '' }]),
+  ) as Record<string, { enabled: boolean; value: string }>;
+}
+
 const form = reactive({
   name: '',
   description: '',
@@ -96,9 +106,8 @@ const form = reactive({
   country: 'FR',
   services: [] as string[],
   status_text: '',
-  contacts: {} as Record<string, { enabled: boolean; value: string }>,
+  contacts: emptyContacts(),
 });
-const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const labels: Record<string, string> = {
   phone: 'Téléphone',
   whatsapp: 'WhatsApp',
@@ -186,8 +195,15 @@ async function publish() {
 onMounted(async () => {
   try {
     const userResponse = await api.get('/auth/me', { headers: headers() });
+    isAdvertiser.value = userResponse.data.role === 'advertiser';
     ageConfirmed.value = Boolean(userResponse.data.age_confirmed);
     localStorage.setItem('user', JSON.stringify(userResponse.data));
+    if (!isAdvertiser.value) {
+      message.value = english.value
+        ? 'This space is reserved for advertiser accounts.'
+        : 'Cet espace est réservé aux comptes annonceurs.';
+      return;
+    }
     const [locationsResponse, listingsResponse] = await Promise.all([
       api.get('/locations', { params: { is_major: 1 }, headers: headers() }),
       api.get('/my/listings', { headers: headers() }),
@@ -212,14 +228,28 @@ onMounted(async () => {
     }
     if (data) {
       listingId.value = data.id;
-      Object.assign(form, data);
+      Object.assign(form, {
+        ...data,
+        contacts: { ...emptyContacts(), ...(data.contacts ?? {}) },
+        services: Array.isArray(data.services) ? data.services : [],
+      });
       form.location_id = data.location?.id ?? data.location_id ?? '';
-      photos.value = (data.photos ?? []) as ListingPhoto[];
+      photos.value = (
+        Array.isArray(data.photos) ? data.photos : (data.photos?.data ?? [])
+      ) as ListingPhoto[];
     }
-
-    for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
-  } catch {
-    message.value = 'Connectez-vous pour gérer vos annonces.';
+  } catch (reason: unknown) {
+    const status = (reason as { response?: { status?: number } }).response?.status;
+    if (status === 403) {
+      isAdvertiser.value = false;
+      message.value = english.value
+        ? 'This space is reserved for advertiser accounts.'
+        : 'Cet espace est réservé aux comptes annonceurs.';
+    } else {
+      message.value = 'Connectez-vous pour gérer vos annonces.';
+    }
+  } finally {
+    dashboardReady.value = true;
   }
 });
 </script>
@@ -233,158 +263,167 @@ onMounted(async () => {
         {{ copy.intro }}
       </p>
       <p v-if="message" class="mt-4 text-dusty-dark">{{ message }}</p>
-      <div
-        class="soft-card mt-8 flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
-      >
-        <div>
-          <p class="eyebrow">{{ copy.subscription }}</p>
-          <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
-          <p class="mt-1 text-sm text-stone-500">
-            Your profile remains active for 7 days after payment.
-          </p>
-        </div>
-        <button
-          v-if="subscription?.status !== 'active'"
-          :disabled="subscribing"
-          class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-          @click="startWeeklySubscription"
-        >
-          {{ subscribing ? 'Opening…' : copy.choose }}
-        </button>
-        <span
-          v-else
-          class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
-          >{{ copy.active }}</span
-        >
+      <div v-if="dashboardReady && !isAdvertiser" class="soft-card mt-8 p-6">
+        {{
+          english
+            ? 'Create or use an advertiser account to publish a profile.'
+            : 'Créez ou utilisez un compte annonceur pour publier un profil.'
+        }}
       </div>
-      <div v-if="!ageConfirmed" class="mt-8 rounded-2xl border border-dusty/30 bg-dusty/10 p-5">
-        <h2 class="font-medium">{{ copy.ageTitle }}</h2>
-        <p class="mt-2 text-sm text-zinc-700">
-          {{ copy.ageText }}
-        </p>
-        <button
-          :disabled="confirmingAge"
-          class="mt-4 rounded-full bg-dusty px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
-          @click="startAgeVerification"
+      <template v-else-if="isAdvertiser">
+        <div
+          class="soft-card mt-8 flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between"
         >
-          {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : copy.ageStart }}
-        </button>
-      </div>
-      <form class="mt-10 space-y-6" @submit.prevent="save">
-        <div class="soft-card space-y-5 p-6">
           <div>
-            <p class="eyebrow">{{ copy.details }}</p>
-            <h2 class="mt-2 text-2xl font-light">{{ copy.about }}</h2>
+            <p class="eyebrow">{{ copy.subscription }}</p>
+            <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
+            <p class="mt-1 text-sm text-stone-500">
+              Your profile remains active for 7 days after payment.
+            </p>
           </div>
-          <label class="block text-sm font-medium"
-            >{{ copy.display }}
-            <input
-              v-model="form.name"
-              required
-              maxlength="120"
-              class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              :placeholder="copy.placeholders.name"
-            />
-          </label>
-          <label class="block text-sm font-medium"
-            >{{ copy.description }}
-            <textarea
-              v-model="form.description"
-              required
-              minlength="80"
-              maxlength="5000"
-              class="mt-2 min-h-36 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              :placeholder="copy.placeholders.description"
-            ></textarea>
-          </label>
-          <div class="grid gap-4 md:grid-cols-2">
+          <button
+            v-if="subscription?.status !== 'active'"
+            :disabled="subscribing"
+            class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
+            @click="startWeeklySubscription"
+          >
+            {{ subscribing ? 'Opening…' : copy.choose }}
+          </button>
+          <span
+            v-else
+            class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
+            >{{ copy.active }}</span
+          >
+        </div>
+        <div v-if="!ageConfirmed" class="mt-8 rounded-2xl border border-dusty/30 bg-dusty/10 p-5">
+          <h2 class="font-medium">{{ copy.ageTitle }}</h2>
+          <p class="mt-2 text-sm text-zinc-700">
+            {{ copy.ageText }}
+          </p>
+          <button
+            :disabled="confirmingAge"
+            class="mt-4 rounded-full bg-dusty px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+            @click="startAgeVerification"
+          >
+            {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : copy.ageStart }}
+          </button>
+        </div>
+        <form class="mt-10 space-y-6" @submit.prevent="save">
+          <div class="soft-card space-y-5 p-6">
+            <div>
+              <p class="eyebrow">{{ copy.details }}</p>
+              <h2 class="mt-2 text-2xl font-light">{{ copy.about }}</h2>
+            </div>
             <label class="block text-sm font-medium"
-              >{{ copy.location }}
-              <select
-                v-model="form.location_id"
+              >{{ copy.display }}
+              <input
+                v-model="form.name"
                 required
+                maxlength="120"
                 class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              >
-                <option value="">{{ english ? 'Choose a city' : 'Choisir une ville' }}</option>
-                <option v-for="location in locations" :key="location.id" :value="location.id">
-                  {{ location.name }}{{ location.country ? ` · ${location.country}` : '' }}
-                </option>
-              </select>
-              <span v-if="!locations.length" class="mt-2 block text-xs text-red-300">
-                {{
-                  english
-                    ? 'No publishing city was returned by the API. Check that the API is running.'
-                    : 'Aucune ville de publication n’est fournie par l’API. Vérifiez que l’API fonctionne.'
-                }}
-              </span>
+                :placeholder="copy.placeholders.name"
+              />
             </label>
             <label class="block text-sm font-medium"
-              >{{ copy.age }}
-              <input
-                v-model.number="form.age"
+              >{{ copy.description }}
+              <textarea
+                v-model="form.description"
                 required
-                type="number"
-                min="18"
-                max="80"
+                minlength="80"
+                maxlength="5000"
+                class="mt-2 min-h-36 w-full rounded-xl border border-zinc-300 bg-white p-3"
+                :placeholder="copy.placeholders.description"
+              ></textarea>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="block text-sm font-medium"
+                >{{ copy.location }}
+                <select
+                  v-model="form.location_id"
+                  required
+                  class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
+                >
+                  <option value="">{{ english ? 'Choose a city' : 'Choisir une ville' }}</option>
+                  <option v-for="location in locations" :key="location.id" :value="location.id">
+                    {{ location.name }}{{ location.country ? ` · ${location.country}` : '' }}
+                  </option>
+                </select>
+                <span v-if="!locations.length" class="mt-2 block text-xs text-red-300">
+                  {{
+                    english
+                      ? 'No publishing city was returned by the API. Check that the API is running.'
+                      : 'Aucune ville de publication n’est fournie par l’API. Vérifiez que l’API fonctionne.'
+                  }}
+                </span>
+              </label>
+              <label class="block text-sm font-medium"
+                >{{ copy.age }}
+                <input
+                  v-model.number="form.age"
+                  required
+                  type="number"
+                  min="18"
+                  max="80"
+                  class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
+                />
+              </label>
+            </div>
+            <label class="block text-sm font-medium"
+              >{{ copy.services }}
+              <input
+                v-model="form.services[0]"
+                required
                 class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
+                :placeholder="copy.placeholders.services"
               />
             </label>
           </div>
-          <label class="block text-sm font-medium"
-            >{{ copy.services }}
-            <input
-              v-model="form.services[0]"
-              required
+          <label class="block"
+            >{{ copy.status
+            }}<input
+              v-model="form.status_text"
+              maxlength="80"
+              :placeholder="copy.placeholders.status"
               class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              :placeholder="copy.placeholders.services"
-            />
-          </label>
-        </div>
-        <label class="block"
-          >{{ copy.status
-          }}<input
-            v-model="form.status_text"
-            maxlength="80"
-            :placeholder="copy.placeholders.status"
-            class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-        /></label>
-        <div class="grid gap-4 md:grid-cols-2">
-          <label
-            v-for="type in contactTypes"
-            :key="type"
-            class="rounded-xl border border-zinc-200 bg-white p-4"
-            ><span class="flex items-center justify-between font-medium"
-              >{{ contactLabel(type)
-              }}<input
-                v-model="form.contacts[type].enabled"
-                type="checkbox"
-                class="h-5 w-5 accent-dusty" /></span
-            ><input
-              v-model="form.contacts[type].value"
-              :disabled="!form.contacts[type].enabled"
-              :placeholder="contactLabel(type)"
-              class="mt-3 w-full rounded-lg border border-zinc-300 p-2 disabled:bg-zinc-100"
           /></label>
-        </div>
-        <button class="rounded-full bg-dusty px-6 py-3 font-medium text-white">
-          {{ listingId ? copy.save : copy.create }}
-        </button>
-        <button
-          type="button"
-          :disabled="!ageConfirmed"
-          class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
-          @click="publish"
-        >
-          {{ copy.publish }}
-        </button>
-      </form>
-      <ListingPhotoManager
-        v-if="listingId"
-        v-model:photos="photos"
-        :listing-uuid="listingId"
-        class="mt-8"
-        @message="message = $event"
-      />
+          <div class="grid gap-4 md:grid-cols-2">
+            <label
+              v-for="type in contactTypes"
+              :key="type"
+              class="rounded-xl border border-zinc-200 bg-white p-4"
+              ><span class="flex items-center justify-between font-medium"
+                >{{ contactLabel(type)
+                }}<input
+                  v-model="form.contacts[type].enabled"
+                  type="checkbox"
+                  class="h-5 w-5 accent-dusty" /></span
+              ><input
+                v-model="form.contacts[type].value"
+                :disabled="!form.contacts[type].enabled"
+                :placeholder="contactLabel(type)"
+                class="mt-3 w-full rounded-lg border border-zinc-300 p-2 disabled:bg-zinc-100"
+            /></label>
+          </div>
+          <button class="rounded-full bg-dusty px-6 py-3 font-medium text-white">
+            {{ listingId ? copy.save : copy.create }}
+          </button>
+          <button
+            type="button"
+            :disabled="!ageConfirmed"
+            class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
+            @click="publish"
+          >
+            {{ copy.publish }}
+          </button>
+        </form>
+        <ListingPhotoManager
+          v-if="listingId"
+          v-model:photos="photos"
+          :listing-uuid="listingId"
+          class="mt-8"
+          @message="message = $event"
+        />
+      </template>
     </section>
   </main>
 </template>
