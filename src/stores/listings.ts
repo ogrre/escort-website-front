@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../lib/api';
 import { cachedRequest } from '../lib/request-cache';
+import type { SearchFilters } from '../lib/profile-search';
 
 export interface Listing {
   id: string;
@@ -21,6 +22,13 @@ export interface Listing {
   tags?: string[];
   contacts?: Record<string, { enabled: boolean; value: string }>;
   comments?: { id: string; body: string; author?: { name?: string } }[];
+}
+
+export interface ListingPagination {
+  current_page: number;
+  last_page: number;
+  total: number;
+  per_page: number;
 }
 
 interface ProfileSearchResult {
@@ -59,21 +67,30 @@ export const useListingsStore = defineStore('listings', () => {
   const listings = ref<Listing[]>([]);
   const loading = ref(false);
   const error = ref('');
+  const links = ref<{ next: string | null; prev: string | null }>({ next: null, prev: null });
+  const pagination = ref<ListingPagination | null>(null);
 
-  async function search(params: Record<string, string> = {}) {
+  async function search(params: SearchFilters = {}) {
     loading.value = true;
     error.value = '';
     try {
       const requestParams = { limit: '24', ...params };
       const cacheKey = 'profiles:' + JSON.stringify(requestParams);
-      listings.value = await cachedRequest(
+      const result = await cachedRequest(
         cacheKey,
         async () => {
           const response = await api.get('/profiles/search', { params: requestParams });
-          return (response.data.data as ProfileSearchResult[]).map(normalizeProfile);
+          return {
+            listings: (response.data.data as ProfileSearchResult[]).map(normalizeProfile),
+            links: response.data.links ?? { next: null, prev: null },
+            pagination: response.data.meta ?? null,
+          };
         },
         30_000,
       );
+      listings.value = result.listings;
+      links.value = { next: result.links.next ?? null, prev: result.links.prev ?? null };
+      pagination.value = result.pagination;
     } catch {
       listings.value = [];
       error.value = 'Listings could not be loaded. Please try again.';
@@ -82,5 +99,24 @@ export const useListingsStore = defineStore('listings', () => {
     }
   }
 
-  return { listings, loading, error, search };
+  async function searchUrl(url: string) {
+    loading.value = true;
+    error.value = '';
+    try {
+      const response = await api.get(url);
+      listings.value = (response.data.data as ProfileSearchResult[]).map(normalizeProfile);
+      links.value = {
+        next: response.data.links?.next ?? null,
+        prev: response.data.links?.prev ?? null,
+      };
+      pagination.value = response.data.meta ?? null;
+    } catch {
+      listings.value = [];
+      error.value = 'Listings could not be loaded. Please try again.';
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  return { listings, loading, error, links, pagination, search, searchUrl };
 });

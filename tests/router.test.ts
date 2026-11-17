@@ -7,6 +7,7 @@ const publicPaths = [
   '/login',
   '/fr/villes/bordeaux-33063',
   '/en/cities/bordeaux-33063',
+  '/fr/villes',
   '/fr/profil/550e8400-e29b-41d4-a716-446655440000',
   '/en/profile/550e8400-e29b-41d4-a716-446655440000',
   '/mentions-legales',
@@ -33,5 +34,24 @@ describe('public route rendering', () => {
     expect(loginRoute?.component).toBeDefined();
     expect(registerRoute?.component).toBeDefined();
     expect(loginRoute?.component).not.toBe(registerRoute?.component);
+  });
+
+  it('redirects the legacy search route to the home search', () => {
+    expect(routes.find((route) => route.path === '/search')?.redirect).toBe('/');
+  });
+
+  it('never redirects a city display name into a city SEO route', () => {
+    const redirect = routes.find((route) => route.path === '/cities/:citySlug')?.redirect;
+    expect(typeof redirect).toBe('function');
+    expect(
+      (redirect as (to: { params: Record<string, string> }) => string)({
+        params: { citySlug: 'Bordeaux' },
+      }),
+    ).toBe('/');
+    expect(
+      (redirect as (to: { params: Record<string, string> }) => string)({
+        params: { citySlug: 'bordeaux-33063' },
+      }),
+    ).toBe('/fr/villes/bordeaux-33063');
   });
 });
