@@ -13,6 +13,10 @@ origin used for canonical URLs and the sitemap (for example, `https://example.co
 reads active cities and their profiles from `VITE_API_URL`; it fails with an explicit error when
 the Laravel API cannot be reached.
 
+The GitHub Actions quality build sets `PRERENDER_SKIP=1` because it does not run the Laravel API
+service. This only skips static city generation in that isolated check; normal local and production
+builds remain strict and fail when the configured API cannot be reached.
+
 `VITE_SITE_ORIGIN` must be set to `https://example.com` in production. It is used as the origin
 for canonical URLs and sitemap entries for both `/fr/villes/:citySlug` and `/en/cities/:citySlug`.
 The local fallback is `http://localhost:5173`; trailing slashes are removed so generated URLs do

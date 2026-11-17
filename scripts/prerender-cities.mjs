@@ -9,6 +9,10 @@ const apiBase = normalizeSiteOrigin(process.env.VITE_API_URL || 'http://localhos
 const siteOrigin = normalizeSiteOrigin(process.env.VITE_SITE_ORIGIN || 'http://localhost:5173');
 const distRoot = resolve(process.cwd(), 'dist');
 
+export function shouldSkipPrerender(environment = process.env) {
+  return environment.PRERENDER_SKIP === '1';
+}
+
 export function cityPath(locale, slug) {
   return `/${locale}/${locale === 'fr' ? 'villes' : 'cities'}/${encodeURIComponent(slug)}`;
 }
@@ -138,6 +142,10 @@ function escapeHtml(value) {
 }
 
 async function main() {
+  if (shouldSkipPrerender()) {
+    console.log('[prerender] Skipped because PRERENDER_SKIP=1.');
+    return;
+  }
   const template = await readFile(resolve(distRoot, 'index.html'), 'utf8');
   const cities = await fetchLocations();
   for (const city of cities) {

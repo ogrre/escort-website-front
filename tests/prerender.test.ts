@@ -5,6 +5,7 @@ import {
   citySeoMetadata,
   normalizeSiteOrigin,
   renderCityContent,
+  shouldSkipPrerender,
 } from '../scripts/prerender-cities.mjs';
 import { citySitemapUrls } from '../src/lib/sitemap';
 
@@ -64,5 +65,10 @@ describe('city prerender contract', () => {
     expect(
       cityMetadata('fr', city, normalizeSiteOrigin('http://localhost:5173///')).canonical,
     ).toBe('http://localhost:5173/fr/villes/bordeaux-33063');
+  });
+
+  it('only skips prerendering when explicitly requested by the environment', () => {
+    expect(shouldSkipPrerender({})).toBe(false);
+    expect(shouldSkipPrerender({ PRERENDER_SKIP: '1' })).toBe(true);
   });
 });
