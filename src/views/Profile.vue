@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { api } from '../lib/api';
 import type { Listing } from '../stores/listings';
 import { useCopy } from '../lib/i18n';
+import { setSeo } from '../lib/seo';
 
 const route = useRoute();
 const { locale } = useCopy({ fr: 'fr', en: 'en' });
@@ -39,7 +40,7 @@ function contactHref(type: string, value: string): string {
 async function submitComment() {
   try {
     await api.post(
-      `/listings/${route.params.id}/comments`,
+      `/profiles/${route.params.uuid}/comments`,
       { body: commentBody.value },
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } },
     );
@@ -56,7 +57,16 @@ async function submitComment() {
 
 onMounted(async () => {
   try {
-    listing.value = (await api.get(`/listings/${route.params.id}`)).data.data;
+    const uuid = String(route.params.uuid);
+    listing.value = (await api.get(`/profiles/${encodeURIComponent(uuid)}`)).data.data;
+    const profile = listing.value;
+    if (!profile) throw new Error('Profile response was empty');
+    setSeo({
+      title: `${profile.name} | Élégance`,
+      description: profile.description ?? '',
+      canonical: `${window.location.origin}/${english.value ? 'en/profile' : 'fr/profil'}/${encodeURIComponent(uuid)}`,
+      robots: 'index,follow',
+    });
   } catch {
     error.value = english.value
       ? 'This profile is no longer available.'
