@@ -1,14 +1,18 @@
 {
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
-    "dev": "vite",
-    "typecheck": "vue-tsc --noEmit",
+    "dev": "nuxt dev --host localhost",
+    "typecheck": "nuxt typecheck",
     "test": "vitest run",
-    "build": "npm run typecheck && vite build && node scripts/prerender-cities.mjs",
-    "lint": "eslint src && prettier --check src",
-    "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "lint": "eslint app server nuxt.config.ts && prettier --check app server nuxt.config.ts",
+    "format": "prettier --write app server nuxt.config.ts",
+    "format:check": "prettier --check app server nuxt.config.ts"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
@@ -28,6 +32,7 @@
     "eslint": "^9.39.5",
     "eslint-plugin-vue": "^10.12.0",
     "jsdom": "^26.0.0",
+    "nuxt": "^4.0.0",
     "playwright-bdd": "^9.2.1",
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",

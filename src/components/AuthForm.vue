@@ -79,7 +79,8 @@ async function submit() {
     }
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
-    await router.push(response.data.user.role === 'advertiser' ? '/dashboard' : '/');
+    const returnTo = String(route.query.return_to ?? '');
+    await router.push(response.data.user.role === 'advertiser' ? '/dashboard' : (returnTo.startsWith('/') ? returnTo : '/'));
   } catch (reason: unknown) {
     error.value = apiErrorMessage(reason);
   } finally {

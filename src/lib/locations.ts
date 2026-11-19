@@ -33,7 +33,7 @@ function normalizeText(value: string): string {
     .toLocaleLowerCase();
 }
 
-export function normalizeLocations(items: ApiLocation[]): City[] {
+export function normalizeLocations(items: ApiLocation[], includeEmpty = false): City[] {
   const locations = items
     .map((item): City | null => {
       const name = (item.name ?? item.city ?? '').trim();
@@ -57,7 +57,7 @@ export function normalizeLocations(items: ApiLocation[]): City[] {
         is_major: Boolean(item.is_major),
       };
     })
-    .filter((item): item is City => item !== null && item.listings_count > 0);
+    .filter((item): item is City => item !== null && (includeEmpty || item.listings_count > 0));
 
   const uniqueLocations = new Map<string, City>();
   locations.forEach((location) => {
