@@ -1,8 +1,8 @@
 export function usePublicApi() {
   const config = useRuntimeConfig();
   return $fetch.create({
-    baseURL: config.public.apiBaseUrl,
-    headers: { Accept: 'application/json', 'X-App-Language': 'fr' },
-    timeout: 10000,
+    baseURL: import.meta.server ? config.apiInternalBaseUrl : config.public.apiBaseUrl,
+    headers: { Accept: 'application/json' },
+    timeout: 5000,
   });
 }
