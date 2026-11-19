@@ -141,11 +141,96 @@ const frenchProfileLabels: Record<string, string> = {
   available: 'Disponible',
 };
 
+const englishProfileLabels: Record<string, string> = {
+  woman: 'Woman',
+  women: 'Women',
+  femme: 'Woman',
+  femmes: 'Women',
+  female: 'Woman',
+  man: 'Man',
+  men: 'Men',
+  homme: 'Man',
+  hommes: 'Men',
+  male: 'Man',
+  couple: 'Couple',
+  trans: 'TV / TS',
+  tvts: 'TV / TS',
+  verified: 'Verified',
+  yes: 'Yes',
+  oui: 'Yes',
+  no: 'No',
+  non: 'No',
+  occasional: 'Occasionally',
+  occasionnel: 'Occasionally',
+  social: 'Social',
+  natural: 'Natural',
+  naturelle: 'Natural',
+  shaved: 'Shaved',
+  epilee: 'Shaved',
+  partial: 'Partial',
+  partielle: 'Partial',
+  receives: 'Receives',
+  recoit: 'Receives',
+  outcall: 'Travels',
+  se_deplace: 'Travels',
+  dinner: 'Dinner',
+  diner: 'Dinner',
+  massage: 'Massage',
+  companionship: 'Companionship',
+  compagnie: 'Companionship',
+  conversation: 'Conversation',
+  travel: 'Travel',
+  voyage: 'Travel',
+  event: 'Event',
+  evenement: 'Event',
+  photo: 'Photo',
+  sporty: 'Sporty',
+  glamourous: 'Glamorous',
+  glamorous: 'Glamorous',
+  glamour: 'Glamorous',
+  elegant: 'Elegant',
+  caucasian: 'Caucasian',
+  caucasien: 'Caucasian',
+  french: 'French',
+  francaise: 'French',
+  estonian: 'Estonian',
+  estonienne: 'Estonian',
+  hazel: 'Hazel',
+  noisette: 'Hazel',
+  brown: 'Brown',
+  marron: 'Brown',
+  black: 'Black',
+  noir: 'Black',
+  blonde: 'Blonde',
+  blond: 'Blonde',
+  brunette: 'Brunette',
+  brun: 'Brunette',
+  chestnut: 'Chestnut',
+  chatain: 'Chestnut',
+  silicone: 'Silicone',
+  fully_shaved: 'Fully shaved',
+  fully_shaven: 'Fully shaved',
+  entierement_rasee: 'Fully shaved',
+  both: 'Men and women',
+  online: 'Online',
+  en_ligne: 'Online',
+  available: 'Available',
+  disponible: 'Available',
+};
+
+function profileValueKey(value: unknown) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('en')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 export function translateProfileValue(value: unknown, locale = 'fr'): string {
   const text = String(value ?? '');
-  if (locale !== 'fr') return text;
-  const key = text.toLocaleLowerCase('en').replace(/[-\s]/g, '_');
-  return frenchProfileLabels[key] ?? text;
+  const key = profileValueKey(value);
+  return (locale === 'fr' ? frenchProfileLabels[key] : englishProfileLabels[key]) ?? text;
 }
 export function profilePath(uuid: string, locale = 'fr') {
   return `/${locale === 'fr' ? 'fr/profil' : 'en/profile'}/${encodeURIComponent(uuid)}`;
