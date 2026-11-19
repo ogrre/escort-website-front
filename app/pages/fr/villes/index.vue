@@ -1,23 +1,13 @@
 <script setup lang="ts">
-import type { ApiLocation } from '../../../../src/lib/locations';
-import { locationList, cityPath } from '../../../utils/public';
+import { fetchAllLocations } from '../../../composables/useLocations';
 const api = usePublicApi();
-const route = useRoute();
 const { data, error } = await useAsyncData('locations-directory', () =>
-  api<ApiLocation[] | { data: ApiLocation[] }>('/locations', {
-    query: {
-      has_listings: 1,
-      search: route.query.search,
-      is_major: route.query.is_major,
-      per_page: 50,
-      page: route.query.page,
-    },
-  }).then(locationList),
+  fetchAllLocations(api, { country: 'FR', has_listings: 1, per_page: 100 }),
 );
 const config = useRuntimeConfig();
 useSeoMeta({
-  title: 'Villes — ÉLÉGANCE',
-  description: 'Parcourez les villes françaises où des profils sont disponibles.',
+  title: 'Toutes les villes — ÉLÉGANCE',
+  description: 'Parcourez l’annuaire officiel des villes françaises et leurs profils publics.',
   robots: 'index,follow',
 });
 useHead({
@@ -27,26 +17,18 @@ useHead({
 });
 </script>
 <template>
-  <main class="v2-page v2-wrap">
-    <p class="v2-eyebrow">Annuaire · 18+</p>
-    <h1>Villes</h1>
-    <form class="v2-search-panel" action="/fr/villes" method="get">
-      <input name="search" :value="route.query.search" placeholder="Rechercher une ville" /><button
-        class="v2-button primary"
-      >
-        Rechercher
-      </button>
-    </form>
-    <p v-if="error" role="alert">Les villes ne peuvent pas être chargées.</p>
-    <div class="v2-city-grid">
-      <NuxtLink
-        v-for="city in data ?? []"
-        :key="city.slug"
-        :to="cityPath(city.slug)"
-        class="v2-city-card"
-        ><strong>{{ city.name }}</strong
-        ><small>{{ city.listings_count }} profils</small></NuxtLink
-      >
+  <main class="v8-directory v8-container">
+    <nav class="v8-breadcrumb" aria-label="Fil d’Ariane">
+      <NuxtLink to="/">Accueil</NuxtLink><span>/</span><span>Villes</span>
+    </nav>
+    <span class="v8-eyebrow">Explorer la France · 18+</span>
+    <h1>Toutes les villes</h1>
+    <p class="v8-lead">
+      Explorez les profils publics par ville. Recherchez par nom ou utilisez l’index alphabétique.
+    </p>
+    <div v-if="error" class="v8-notice" role="alert">
+      Impossible de charger l’annuaire. Réessayez plus tard.
     </div>
+    <CityDirectoryGrid v-else :cities="data ?? []" />
   </main>
 </template>

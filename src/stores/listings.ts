@@ -22,6 +22,27 @@ export interface Listing {
   tags?: string[];
   contacts?: Record<string, { enabled: boolean; value: string }>;
   comments?: { id: string; body: string; author?: { name?: string } }[];
+  gender?: string;
+  nationality?: string;
+  ethnicity?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  eye_color?: string;
+  hair_color?: string;
+  cup_size?: string;
+  intimate_grooming?: string;
+  smoking?: string;
+  alcohol?: string;
+  styles?: string[];
+  interested_in?: string[];
+  weekly_hours?: unknown;
+  working_cities?: { name: string; slug?: string }[];
+  receives?: boolean;
+  outcalls?: boolean;
+  last_online?: string;
+  updated_at?: string;
+  views?: number;
+  has_video?: boolean;
 }
 
 export interface ListingPagination {

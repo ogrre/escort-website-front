@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import type { ApiLocation } from '../../../../src/lib/locations';
-import { locationList, cityPath } from '../../../utils/public';
+import { fetchAllLocations } from '../../../composables/useLocations';
 const api = usePublicApi();
-const { data } = await useAsyncData('locations-directory-en', () =>
-  api<ApiLocation[] | { data: ApiLocation[] }>('/locations', {
-    query: { has_listings: 1, per_page: 50 },
-  }).then(locationList),
+const { data, error } = await useAsyncData('locations-directory-en', () =>
+  fetchAllLocations(api, { country: 'FR', has_listings: 1, per_page: 100 }),
 );
 const config = useRuntimeConfig();
 useSeoMeta({
-  title: 'Cities — ÉLÉGANCE',
-  description: 'Browse French cities with available profiles.',
+  title: 'All cities — ÉLÉGANCE',
+  description: 'Browse the official directory of French cities and public profiles.',
   robots: 'index,follow',
 });
 useHead({
@@ -20,18 +17,16 @@ useHead({
 });
 </script>
 <template>
-  <main class="v2-page v2-wrap">
-    <p class="v2-eyebrow">Directory · 18+</p>
-    <h1>Cities</h1>
-    <div class="v2-city-grid">
-      <NuxtLink
-        v-for="city in data ?? []"
-        :key="city.slug"
-        :to="cityPath(city.slug, 'en')"
-        class="v2-city-card"
-        ><strong>{{ city.name }}</strong
-        ><small>{{ city.listings_count }} profiles</small></NuxtLink
-      >
-    </div>
+  <main class="v8-directory v8-container">
+    <nav class="v8-breadcrumb" aria-label="Breadcrumb">
+      <NuxtLink to="/">Home</NuxtLink><span>/</span><span>Cities</span>
+    </nav>
+    <span class="v8-eyebrow">Explore France · 18+</span>
+    <h1>All cities</h1>
+    <p class="v8-lead">
+      Explore public profiles by city. Search by name or use the alphabetical index.
+    </p>
+    <div v-if="error" class="v8-notice" role="alert">The directory could not be loaded.</div>
+    <CityDirectoryGrid v-else :cities="data ?? []" />
   </main>
 </template>

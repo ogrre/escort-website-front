@@ -6,6 +6,8 @@ dist/
 .env
 .env.*
 !.env.example
+*.md
+!.entire/agent-guide.md
 *.log
 .DS_Store
 *.tsbuildinfo
