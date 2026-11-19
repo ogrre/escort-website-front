@@ -8,14 +8,14 @@ The frontend now uses Nuxt 4.5.2, TypeScript and the Vercel Nitro preset. Deploy
 | --- | --- | --- |
 | `/` | SSR + Vercel ISR 300 s | `index,follow` |
 | `/fr/villes`, `/en/cities` | SSR + ISR 3600 s | `index,follow` |
-| `/fr/villes/:citySlug`, `/en/cities/:citySlug` | SSR + ISR 300 s | index only without meaningful filters |
+| `/fr/villes/:citySlug`, `/en/cities/:citySlug` | SSR sans cache public (query filters) | index only without meaningful filters |
 | `/fr/profil/:uuid`, `/en/profile/:uuid` | SSR + ISR 60 s | public profiles only; API controls publication |
 | `/dashboard/**`, auth, admin | CSR/no-store where private | `noindex`; never in sitemap |
 | `/robots.txt`, `/sitemap.xml` | Dynamic Nitro routes | API-backed; no static city list |
 
 Filtered city pages use `noindex,follow` and canonicalize to the clean city URL. Pagination retains crawlable links and is not blindly canonicalized to page one, because pages can contain distinct profiles. The sitemap currently includes public eligible locations; profile sitemap inclusion requires a confirmed API endpoint for enumerating all active public profile UUIDs.
 
-ISR is time-based only in this step. Laravel does not currently provide a frontend revalidation webhook or tag contract, so publication/suspension changes may remain stale for the configured window. API authorization and publication state remain authoritative; a backend notification plus targeted Vercel revalidation should be added when the API contract exists.
+ISR is limited to public routes whose response is identical for a given path. Directory and city routes remain SSR-only because they accept query filters and their Vercel query-string cache behavior has not been verified. Laravel does not currently provide a frontend revalidation webhook or tag contract, so cached profile changes may remain stale for the configured window. API authorization and publication state remain authoritative; a backend notification plus targeted Vercel revalidation should be added when the API contract exists.
 
 ## Legacy route map
 
