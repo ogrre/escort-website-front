@@ -209,7 +209,7 @@ useHead({ link: [{ rel: 'canonical', href: canonicalSiteUrl(profilePath(uuid, 'e
           <dl class="v8-profile-facts">
             <div>
               <dt>Gender</dt>
-              <dd>{{ translateProfileValue(listing.gender) || '—' }}</dd>
+              <dd>{{ translateProfileValue(listing.gender, 'en') || '—' }}</dd>
             </div>
             <div>
               <dt>Age</dt>
@@ -225,11 +225,11 @@ useHead({ link: [{ rel: 'canonical', href: canonicalSiteUrl(profilePath(uuid, 'e
             </div>
             <div v-if="listing.eye_color">
               <dt>Eyes</dt>
-              <dd>{{ translateProfileValue(listing.eye_color) }}</dd>
+              <dd>{{ translateProfileValue(listing.eye_color, 'en') }}</dd>
             </div>
             <div v-if="listing.hair_color">
               <dt>Hair</dt>
-              <dd>{{ translateProfileValue(listing.hair_color) }}</dd>
+              <dd>{{ translateProfileValue(listing.hair_color, 'en') }}</dd>
             </div>
             <div v-if="listing.height_cm">
               <dt>Height</dt>
@@ -245,15 +245,15 @@ useHead({ link: [{ rel: 'canonical', href: canonicalSiteUrl(profilePath(uuid, 'e
             </div>
             <div v-if="listing.intimate_grooming">
               <dt>Grooming</dt>
-              <dd>{{ translateProfileValue(listing.intimate_grooming) }}</dd>
+              <dd>{{ translateProfileValue(listing.intimate_grooming, 'en') }}</dd>
             </div>
             <div v-if="listing.smoking">
               <dt>Smoking</dt>
-              <dd>{{ translateProfileValue(listing.smoking) }}</dd>
+              <dd>{{ translateProfileValue(listing.smoking, 'en') }}</dd>
             </div>
             <div v-if="listing.alcohol">
               <dt>Alcohol</dt>
-              <dd>{{ translateProfileValue(listing.alcohol) }}</dd>
+              <dd>{{ translateProfileValue(listing.alcohol, 'en') }}</dd>
             </div>
           </dl>
         </section>
@@ -261,15 +261,17 @@ useHead({ link: [{ rel: 'canonical', href: canonicalSiteUrl(profilePath(uuid, 'e
           <h2>Details</h2>
           <p v-if="listing.interested_in?.length">
             <span class="v8-profile-label">Interested in</span
-            >{{ listing.interested_in.map((value) => translateProfileValue(value)).join(' · ') }}
+            >{{
+              listing.interested_in.map((value) => translateProfileValue(value, 'en')).join(' · ')
+            }}
           </p>
           <p v-if="listing.services?.length">
             <span class="v8-profile-label">Services</span
-            >{{ listing.services.map((value) => translateProfileValue(value)).join(' · ') }}
+            >{{ listing.services.map((value) => translateProfileValue(value, 'en')).join(' · ') }}
           </p>
           <p v-if="listing.styles?.length">
             <span class="v8-profile-label">Styles</span
-            >{{ listing.styles.map((value) => translateProfileValue(value)).join(' · ') }}
+            >{{ listing.styles.map((value) => translateProfileValue(value, 'en')).join(' · ') }}
           </p>
         </section>
       </aside>

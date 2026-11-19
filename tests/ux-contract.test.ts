@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cityMatches } from '../app/composables/useLocations';
 import { buildCitySearchQuery } from '../app/utils/search-query';
-import { normalizePublicProfile } from '../app/utils/public';
+import { normalizePublicProfile, translateProfileValue } from '../app/utils/public';
 
 describe('v5 public UX contracts', () => {
   it('filters the complete city catalog by accents, search and letter', () => {
@@ -33,5 +33,13 @@ describe('v5 public UX contracts', () => {
     });
     expect(profile).toMatchObject({ id: 'profile-uuid', name: 'Camille', city: 'Lille' });
     expect(profile).not.toHaveProperty('slug');
+  });
+
+  it('keeps profile labels in the requested locale', () => {
+    expect(translateProfileValue('Femmes', 'en')).toBe('Women');
+    expect(translateProfileValue('Voyage', 'en')).toBe('Travel');
+    expect(translateProfileValue('Événement', 'en')).toBe('Event');
+    expect(translateProfileValue('Naturelle', 'en')).toBe('Natural');
+    expect(translateProfileValue('women', 'fr')).toBe('Femmes');
   });
 });
