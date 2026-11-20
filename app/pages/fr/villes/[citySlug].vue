@@ -53,18 +53,28 @@ const { data, error } = await useAsyncData(
       links: profiles.links,
     };
   },
+  {
+    default: () => ({ city: null, profiles: [], meta: undefined, links: undefined }),
+    watch: [() => route.fullPath],
+  },
 );
 if (error.value) throw error.value;
 if (!data.value?.city) throw createError({ statusCode: 404, statusMessage: 'City not found' });
-const city = computed(() => data.value!.city);
+const city = computed(() => data.value?.city);
 const filtered = computed(() =>
   Object.keys(route.query).some((key) => !['page', 'limit', 'sort'].includes(key)),
 );
 useSeoMeta(() => ({
-  title: `Escortes et modèles à ${city.value.name} — Profils disponibles | ÉLÉGANCE`,
-  description: `Découvrez les profils et annonces disponibles à ${city.value.name}, ${city.value.region?.name ?? 'France'}.`,
+  title: city.value
+    ? `Escortes et modèles à ${city.value.name} — Profils disponibles | ÉLÉGANCE`
+    : 'Profils disponibles | ÉLÉGANCE',
+  description: city.value
+    ? `Découvrez les profils et annonces disponibles à ${city.value.name}, ${city.value.region?.name ?? 'France'}.`
+    : 'Découvrez les profils et annonces disponibles près de chez vous.',
   robots: filtered.value ? 'noindex,follow' : 'index,follow',
-  ogTitle: `Profils à ${city.value.name} | ÉLÉGANCE`,
+  ogTitle: city.value
+    ? `Profils à ${city.value.name} | ÉLÉGANCE`
+    : 'Profils disponibles | ÉLÉGANCE',
 }));
 useHead(() => ({
   link: [{ rel: 'canonical', href: canonicalSiteUrl(cityPath(slug.value), siteUrl) }],
@@ -90,7 +100,7 @@ useHead(() => ({
           {
             '@type': 'ListItem',
             position: 3,
-            name: city.value.name,
+            name: city.value?.name ?? '',
             item: canonicalSiteUrl(cityPath(slug.value), siteUrl),
           },
         ],
@@ -98,7 +108,7 @@ useHead(() => ({
     },
   ],
 }));
-const listings = computed(() => data.value!.profiles.map(normalizePublicProfile));
+const listings = computed(() => data.value?.profiles?.map(normalizePublicProfile) ?? []);
 const drawerOpen = ref(false);
 const filtersForUi = computed(() =>
   Object.fromEntries(
@@ -159,7 +169,7 @@ function requestLocation() {
 }
 </script>
 <template>
-  <main class="v8-city-page">
+  <main v-if="city" class="v8-city-page">
     <nav class="v2-wrap text-sm v8-city-breadcrumb" aria-label="Fil d’Ariane">
       <NuxtLink to="/">Accueil</NuxtLink> / <NuxtLink to="/fr/villes">Villes</NuxtLink> /
       {{ city.name }}
@@ -264,5 +274,8 @@ function requestLocation() {
         </nav>
       </section>
     </section>
+  </main>
+  <main v-else class="v8-city-page" aria-busy="true">
+    <p class="v2-empty">Chargement des profils…</p>
   </main>
 </template>

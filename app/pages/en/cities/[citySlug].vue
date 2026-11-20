@@ -23,7 +23,7 @@ const filtersForUi = computed(() =>
 );
 const locationCache = useState<any[]>('public-location-directory', () => []);
 const { data, error } = await useAsyncData(
-  `city-en:${slug}:${JSON.stringify(route.query)}`,
+  () => `city-en:${slug}:${JSON.stringify(route.query)}`,
   async () => {
     const locations = locationCache.value.length
       ? locationCache.value
@@ -42,12 +42,20 @@ const { data, error } = await useAsyncData(
     });
     return { city: resolvedCity, profiles: profiles.data ?? [] };
   },
+  {
+    default: () => ({ city: null, profiles: [] }),
+    watch: [() => route.fullPath],
+  },
 );
 if (error.value || !data.value?.city)
   throw createError({ statusCode: 404, statusMessage: 'City not found' });
+const city = computed(() => data.value?.city);
+const profiles = computed(() => data.value?.profiles ?? []);
 useSeoMeta(() => ({
-  title: `Profiles in ${data.value!.city.name} | ÉLÉGANCE`,
-  description: `Discover public profiles available in ${data.value!.city.name}.`,
+  title: city.value ? `Profiles in ${city.value.name} | ÉLÉGANCE` : 'Profiles | ÉLÉGANCE',
+  description: city.value
+    ? `Discover public profiles available in ${city.value.name}.`
+    : 'Discover public profiles available nearby.',
   robots: Object.keys(route.query).length ? 'noindex,follow' : 'index,follow',
 }));
 useHead(() => ({
@@ -79,12 +87,12 @@ function setSort(event: Event) {
 }
 </script>
 <template>
-  <main class="e-page e-wrap">
+  <main v-if="city" class="e-page e-wrap v8-city-page v8-city-page--en">
     <nav class="e-breadcrumb" aria-label="Breadcrumb">
       <NuxtLink to="/">Home</NuxtLink><span>/</span><NuxtLink to="/en/cities">Cities</NuxtLink
-      ><span>/</span><span>{{ data.city.name }}</span>
+      ><span>/</span><span>{{ city.name }}</span>
     </nav>
-    <h1 class="v8-city-heading">Profiles in {{ data.city.name }}</h1>
+    <h1 class="v8-city-heading">Profiles in {{ city.name }}</h1>
     <section class="e-section">
       <ProfileSearchBar
         :city-slug="slug"
@@ -124,7 +132,7 @@ function setSort(event: Event) {
       <div class="e-results-bar">
         <div>
           <span class="e-kicker">Public results</span>
-          <h2>{{ data.profiles.length }} profiles in {{ data.city.name }}</h2>
+          <h2>{{ profiles.length }} profiles in {{ city.name }}</h2>
         </div>
         <label class="e-sort"
           ><span>Sort</span
@@ -139,16 +147,19 @@ function setSort(event: Event) {
       </div>
       <div class="e-profile-grid">
         <PublicProfileCard
-          v-for="(profile, index) in data.profiles.map(normalizePublicProfile)"
+          v-for="(profile, index) in profiles.map(normalizePublicProfile)"
           :key="profile.id"
           :listing="profile"
           :index="index"
           locale="en"
         />
       </div>
-      <p v-if="!data.profiles.length" class="e-empty">
+      <p v-if="!profiles.length" class="e-empty">
         No public profile is available in this city right now.
       </p>
     </section>
+  </main>
+  <main v-else class="e-page e-wrap v8-city-page v8-city-page--en" aria-busy="true">
+    <p class="e-empty">Loading profiles…</p>
   </main>
 </template>
