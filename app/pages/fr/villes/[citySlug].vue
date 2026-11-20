@@ -98,7 +98,7 @@ useHead(() => ({
     },
   ],
 }));
-const listings = computed(() => data.value!.profiles.map(normalizePublicProfile));
+const listings = computed(() => data.value?.profiles?.map(normalizePublicProfile) ?? []);
 const drawerOpen = ref(false);
 const filtersForUi = computed(() =>
   Object.fromEntries(
