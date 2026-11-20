@@ -613,6 +613,14 @@ body {
   color: var(--e-text);
   padding: 10px;
 }
+.e-filter-grid label {
+  gap: 4px;
+}
+.e-filter-grid input,
+.e-filter-grid select {
+  min-height: 38px;
+  padding: 8px;
+}
 .e-button {
   display: inline-flex;
   min-height: 42px;
@@ -1013,8 +1021,8 @@ body {
   background: rgb(0 0 0 / 0.62);
 }
 .e-inline-filters {
-  margin: 10px 0 18px;
-  padding: 16px;
+  margin: 8px 0 14px;
+  padding: 12px;
   border: 1px solid #765268;
   border-radius: 12px;
   background: linear-gradient(135deg, #2a202a, #211a22);
@@ -1028,7 +1036,7 @@ body {
   font-size: 23px;
 }
 .e-inline-filters__body {
-  max-width: 900px;
+  max-width: 980px;
 }
 @keyframes e-filter-expand {
   from {
@@ -1071,16 +1079,16 @@ body {
 }
 .e-filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 13px;
-  margin-top: 25px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px 10px;
+  margin-top: 14px;
 }
 .e-filter-checks {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 22px 0;
-  padding: 15px 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+  padding: 11px 0;
   border: 0;
   border-top: 1px solid var(--e-line);
 }
@@ -1101,7 +1109,7 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 15px;
+  padding-top: 11px;
   border-top: 1px solid var(--e-line);
 }
 .e-profile-page {
@@ -1304,10 +1312,10 @@ body {
     flex-direction: column;
   }
   .e-filter-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .e-filter-checks {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .app-shell {
@@ -3083,16 +3091,16 @@ h1.v8-city-heading {
     max-height: min(88vh, 760px);
     overflow-y: auto;
     margin: 0;
-    padding: 18px 16px max(18px, env(safe-area-inset-bottom));
+    padding: 12px 14px max(14px, env(safe-area-inset-bottom));
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -18px 45px rgb(0 0 0 / 0.42);
   }
   .e-inline-filters .e-drawer-head {
     position: sticky;
-    top: -18px;
+    top: -12px;
     z-index: 1;
-    margin: -18px -16px 0;
-    padding: 18px 16px 12px;
+    margin: -12px -14px 0;
+    padding: 12px 14px 9px;
     background: #2a202a;
   }
   .v8-directory .e-city-list {
