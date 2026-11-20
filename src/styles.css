@@ -3387,3 +3387,70 @@ textarea {
     gap: 9px;
   }
 }
+
+/* Keep the legacy auth/signup views visually aligned inside the Nuxt v8 shell. */
+.v8-shell {
+  --v2-bg: var(--v8-bg);
+  --v2-panel: var(--v8-panel);
+  --v2-border: var(--v8-line);
+  --v2-pink: var(--v8-pink);
+  --v2-hot: var(--v8-rose);
+  --v2-muted: var(--v8-muted);
+}
+
+.v8-shell .v2-auth-page .v2-search-panel {
+  border: 1px solid var(--v8-line);
+  background: var(--v8-panel);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.2);
+}
+
+.v8-shell .v2-auth-page label {
+  color: #d6c6d0;
+}
+
+.v8-shell .v2-auth-page input,
+.v8-shell .v2-auth-page select,
+.v8-shell .v2-auth-page textarea {
+  width: 100%;
+  border: 1px solid var(--v8-line) !important;
+  border-radius: 8px;
+  background: #18131b !important;
+  color: var(--v8-text) !important;
+  outline: none;
+}
+
+.v8-shell .v2-auth-page input::placeholder,
+.v8-shell .v2-auth-page textarea::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
+
+.v8-shell .v2-auth-page input:focus,
+.v8-shell .v2-auth-page select:focus,
+.v8-shell .v2-auth-page textarea:focus {
+  border-color: var(--v8-pink) !important;
+  box-shadow: 0 0 0 3px rgb(239 185 208 / 0.14);
+}
+
+.v8-shell .v2-auth-page .v2-button.wide {
+  width: 100%;
+}
+
+.v8-shell .v2-signup-card {
+  min-height: 100%;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.16);
+}
+
+.v8-shell .v2-signup-card.visitor {
+  border-color: var(--v8-line);
+}
+
+@media (max-width: 740px) {
+  .v8-shell .v2-auth-page {
+    padding-top: 24px;
+  }
+
+  .v8-shell .v2-signup-page {
+    padding-top: 18px;
+  }
+}
