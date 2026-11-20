@@ -79,7 +79,7 @@ function setSort(event: Event) {
 }
 </script>
 <template>
-  <main class="e-page e-wrap">
+  <main class="e-page e-wrap v8-city-page v8-city-page--en">
     <nav class="e-breadcrumb" aria-label="Breadcrumb">
       <NuxtLink to="/">Home</NuxtLink><span>/</span><NuxtLink to="/en/cities">Cities</NuxtLink
       ><span>/</span><span>{{ data.city.name }}</span>
