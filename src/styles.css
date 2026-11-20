@@ -3441,6 +3441,18 @@ textarea {
   box-shadow: 0 18px 50px rgb(0 0 0 / 0.16);
 }
 
+.v8-shell .v2-signup-row {
+  flex: 1;
+}
+
+.v8-shell .v2-signup-cta {
+  margin-top: 24px;
+}
+
+.v8-shell .v2-button.primary {
+  color: #281620;
+}
+
 .v8-shell .v2-signup-card.visitor {
   border-color: var(--v8-line);
 }
