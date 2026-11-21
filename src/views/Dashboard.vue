@@ -84,6 +84,7 @@ const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
+const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const form = reactive({
   name: '',
   description: '',
@@ -92,9 +93,10 @@ const form = reactive({
   country: 'FR',
   services: [] as string[],
   status_text: '',
-  contacts: {} as Record<string, { enabled: boolean; value: string }>,
+  contacts: Object.fromEntries(
+    contactTypes.map((type) => [type, { enabled: false, value: '' }]),
+  ) as Record<string, { enabled: boolean; value: string }>,
 });
-const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const labels: Record<string, string> = {
   phone: 'Téléphone',
   whatsapp: 'WhatsApp',
