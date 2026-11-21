@@ -104,6 +104,27 @@ const labels: Record<string, string> = {
   other: 'Autre',
 };
 
+function normalizeContacts(value: unknown): Record<string, { enabled: boolean; value: string }> {
+  const source = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+
+  return Object.fromEntries(
+    contactTypes.map((type) => {
+      const contact = source[type];
+      const record = contact && typeof contact === 'object'
+        ? (contact as Record<string, unknown>)
+        : {};
+
+      return [
+        type,
+        {
+          enabled: Boolean(record.enabled),
+          value: typeof record.value === 'string' ? record.value : '',
+        },
+      ];
+    }),
+  );
+}
+
 function contactLabel(type: string) {
   if (english.value)
     return (
@@ -183,10 +204,11 @@ onMounted(async () => {
     if (data) {
       listingId.value = data.id;
       Object.assign(form, data);
+      form.contacts = normalizeContacts(data.contacts);
       photos.value = (data.photos ?? []) as ListingPhoto[];
     }
 
-    for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
+    form.contacts = normalizeContacts(form.contacts);
   } catch {
     message.value = 'Connectez-vous pour gérer vos annonces.';
   }

@@ -21,7 +21,7 @@ body {
   --v8-muted: #b9a9b5;
   --v8-good: #a7d6be;
 }
-.v8-shell {
+.v2-app-shell {
   min-height: 100vh;
   background: var(--v8-bg);
   color: var(--v8-text);
@@ -301,42 +301,42 @@ body {
   --v2-muted: var(--v8-muted);
 }
 
-.v8-shell .v2-auth-page .v2-search-panel {
+.v2-app-shell .v2-auth-page .v2-search-panel {
   border-color: var(--v8-line);
   background: var(--v8-panel);
   box-shadow: 0 12px 35px rgb(0 0 0 / 0.18);
 }
 
-.v8-shell .v2-auth-page label {
+.v2-app-shell .v2-auth-page label {
   color: #d6c6d0;
 }
 
-.v8-shell .v2-auth-page input,
-.v8-shell .v2-auth-page select {
+.v2-app-shell .v2-auth-page input,
+.v2-app-shell .v2-auth-page select {
   border: 1px solid #544450;
   background: #18161b;
   color: #fff;
 }
 
-.v8-shell .v2-auth-page input:focus,
-.v8-shell .v2-auth-page select:focus {
+.v2-app-shell .v2-auth-page input:focus,
+.v2-app-shell .v2-auth-page select:focus {
   border-color: var(--v8-pink);
   outline: 2px solid rgb(239 185 208 / 0.2);
   outline-offset: 1px;
 }
 
-.v8-shell .v2-auth-page input::placeholder {
+.v2-app-shell .v2-auth-page input::placeholder {
   color: #c8b9c2;
   opacity: 1;
 }
 
-.v8-shell .v2-auth-page .v2-button.primary {
+.v2-app-shell .v2-auth-page .v2-button.primary {
   border-color: var(--v8-pink);
   background: var(--v8-pink);
   color: #281620;
 }
 
-.v8-shell .v2-auth-page .v2-button.primary:hover {
+.v2-app-shell .v2-auth-page .v2-button.primary:hover {
   background: var(--v8-rose);
   color: #fff;
 }
