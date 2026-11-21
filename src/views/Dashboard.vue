@@ -15,6 +15,7 @@ const copy = computed(() =>
           'Complete your profile, activate the weekly plan, then verify your age before publishing.',
         subscription: 'Weekly subscription',
         publishWeek: 'Publish for one week',
+        activeHint: 'Your profile remains active for 7 days after payment.',
         active: 'Weekly plan active',
         choose: 'Choose weekly plan',
         ageTitle: 'Age confirmation required',
@@ -46,6 +47,7 @@ const copy = computed(() =>
           'Complétez votre profil, activez le forfait hebdomadaire, puis vérifiez votre âge avant de publier.',
         subscription: 'Abonnement hebdomadaire',
         publishWeek: 'Publier pendant une semaine',
+        activeHint: 'Votre profil reste actif pendant 7 jours après le paiement.',
         active: 'Forfait hebdomadaire actif',
         choose: 'Choisir le forfait hebdomadaire',
         ageTitle: 'Confirmation d’âge obligatoire',
@@ -84,6 +86,7 @@ const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
+const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const form = reactive({
   name: '',
   description: '',
@@ -92,9 +95,10 @@ const form = reactive({
   country: 'FR',
   services: [] as string[],
   status_text: '',
-  contacts: {} as Record<string, { enabled: boolean; value: string }>,
+  contacts: Object.fromEntries(
+    contactTypes.map((type) => [type, { enabled: false, value: '' }]),
+  ) as Record<string, { enabled: boolean; value: string }>,
 });
-const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
 const labels: Record<string, string> = {
   phone: 'Téléphone',
   whatsapp: 'WhatsApp',
@@ -103,6 +107,27 @@ const labels: Record<string, string> = {
   instagram: 'Instagram',
   other: 'Autre',
 };
+
+function normalizeContacts(value: unknown): Record<string, { enabled: boolean; value: string }> {
+  const source = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+
+  return Object.fromEntries(
+    contactTypes.map((type) => {
+      const contact = source[type];
+      const record = contact && typeof contact === 'object'
+        ? (contact as Record<string, unknown>)
+        : {};
+
+      return [
+        type,
+        {
+          enabled: Boolean(record.enabled),
+          value: typeof record.value === 'string' ? record.value : '',
+        },
+      ];
+    }),
+  );
+}
 
 function contactLabel(type: string) {
   if (english.value)
@@ -183,10 +208,11 @@ onMounted(async () => {
     if (data) {
       listingId.value = data.id;
       Object.assign(form, data);
+      form.contacts = normalizeContacts(data.contacts);
       photos.value = (data.photos ?? []) as ListingPhoto[];
     }
 
-    for (const type of contactTypes) form.contacts[type] ??= { enabled: false, value: '' };
+    form.contacts = normalizeContacts(form.contacts);
   } catch {
     message.value = 'Connectez-vous pour gérer vos annonces.';
   }
@@ -207,9 +233,7 @@ onMounted(async () => {
       <div>
         <p class="eyebrow">{{ copy.subscription }}</p>
         <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
-        <p class="mt-1 text-sm text-stone-500">
-          Your profile remains active for 7 days after payment.
-        </p>
+        <p class="mt-1 text-sm text-stone-500">{{ copy.activeHint }}</p>
       </div>
       <button
         v-if="subscription?.status !== 'active'"
