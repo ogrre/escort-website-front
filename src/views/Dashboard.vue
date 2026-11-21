@@ -176,15 +176,21 @@ async function startWeeklySubscription() {
 }
 async function startAgeVerification() {
   confirmingAge.value = true;
+  const verificationWindow = window.open('', '_blank', 'noopener,noreferrer');
   try {
     const response = await api.post(
       '/auth/age-verification/start',
       { return_url: `${window.location.origin}/dashboard` },
       { headers: headers() },
     );
-    window.open(response.data.verification_url, '_blank', 'noopener,noreferrer');
+    if (verificationWindow) {
+      verificationWindow.location.href = response.data.verification_url;
+    } else {
+      window.location.href = response.data.verification_url;
+    }
     message.value = 'Vérification ouverte dans un nouvel onglet. Revenez ici une fois terminée.';
   } catch {
+    verificationWindow?.close();
     message.value = 'La confirmation d’âge n’a pas pu être enregistrée.';
   } finally {
     confirmingAge.value = false;
