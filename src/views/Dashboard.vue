@@ -13,7 +13,7 @@ const copy = computed(() =>
         eyebrow: 'Advertiser space',
         title: 'Create your profile',
         intro:
-          'Complete your profile, activate the weekly plan, then verify your age before publishing.',
+          'Complete your profile. Payment and age verification are required when you publish.',
         subscription: 'Weekly subscription',
         publishWeek: 'Publish for one week',
         activeHint: 'Your profile remains active for 7 days after payment.',
@@ -46,7 +46,7 @@ const copy = computed(() =>
         eyebrow: 'Espace annonceur',
         title: 'Créez votre profil',
         intro:
-          'Complétez votre profil, activez le forfait hebdomadaire, puis vérifiez votre âge avant de publier.',
+          'Complétez votre profil. Le paiement et la vérification d’âge sont demandés lors de la publication.',
         subscription: 'Abonnement hebdomadaire',
         publishWeek: 'Publier pendant une semaine',
         activeHint: 'Votre profil reste actif pendant 7 jours après le paiement.',
@@ -182,16 +182,25 @@ async function save() {
     message.value = saveError(reason);
   }
 }
-async function startWeeklySubscription() {
+async function startWeeklySubscription(): Promise<boolean> {
   subscribing.value = true;
   try {
     const response = await api.post('/subscription/weekly', {}, { headers: headers() });
     subscription.value = response.data.data;
-    if (response.data.checkout_url) window.location.href = response.data.checkout_url;
-    else message.value = 'Weekly subscription activated for local development.';
+    if (response.data.checkout_url) {
+      window.location.href = response.data.checkout_url;
+      return false;
+    }
+    message.value = english.value
+      ? 'Weekly subscription activated.'
+      : 'Forfait hebdomadaire activé.';
+    return subscription.value?.status === 'active';
   } catch (reason: unknown) {
     const response = reason as { response?: { data?: { message?: string } } };
-    message.value = response.response?.data?.message ?? 'Subscription could not be started.';
+    message.value =
+      response.response?.data?.message ??
+      (english.value ? 'Subscription could not be started.' : 'Le paiement n’a pas pu être démarré.');
+    return false;
   } finally {
     subscribing.value = false;
   }
@@ -220,6 +229,10 @@ async function startAgeVerification() {
 }
 async function publish() {
   if (!listingId.value) return;
+  if (subscription.value?.status !== 'active') {
+    const paid = await startWeeklySubscription();
+    if (!paid) return;
+  }
   if (!ageConfirmed.value) {
     await startAgeVerification();
     return;
@@ -273,19 +286,17 @@ onMounted(async () => {
         <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
         <p class="mt-1 text-sm text-stone-500">{{ copy.activeHint }}</p>
       </div>
-      <button
-        v-if="subscription?.status !== 'active'"
-        :disabled="subscribing"
-        class="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-        @click="startWeeklySubscription"
-      >
-        {{ subscribing ? 'Opening…' : copy.choose }}
-      </button>
       <span
         v-else
         class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
         >{{ copy.active }}</span
       >
+      <span
+        v-if="subscription?.status !== 'active'"
+        class="text-sm text-stone-500"
+      >
+        {{ english ? 'Payment is requested when you publish.' : 'Le paiement est demandé lors de la publication.' }}
+      </span>
     </div>
     <form class="mt-10 space-y-6" @submit.prevent="save">
       <div class="soft-card space-y-5 p-6">
@@ -392,11 +403,27 @@ onMounted(async () => {
       </button>
       <button
         type="button"
-        :disabled="confirmingAge || !listingId"
+        :disabled="confirmingAge || subscribing || !listingId"
         class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
         @click="publish"
       >
-        {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : ageConfirmed ? copy.publish : copy.verifyBeforePublish }}
+        {{
+          subscribing
+            ? english
+              ? 'Opening payment…'
+              : 'Ouverture du paiement…'
+            : confirmingAge
+              ? english
+                ? 'Opening verification…'
+                : 'Ouverture de la vérification…'
+              : subscription?.status !== 'active'
+                ? english
+                  ? 'Pay and publish'
+                  : 'Payer et publier'
+                : ageConfirmed
+                  ? copy.publish
+                  : copy.verifyBeforePublish
+        }}
       </button>
     </form>
     <ListingPhotoManager
