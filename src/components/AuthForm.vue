@@ -138,19 +138,6 @@ async function submit() {
           }}</span>
         </label>
 
-        <p v-if="isRegister" class="v2-role-summary">
-          {{
-            isAdvertiser
-              ? english
-                ? 'Advertiser account · profile publishing'
-                : 'Compte annonceur · publication de profils'
-              : english
-                ? 'Visitor account · favourites, search and messages'
-                : 'Compte visiteur · favoris, recherche et échanges'
-          }}
-          <RouterLink to="/register">Changer de type de compte</RouterLink>
-        </p>
-
         <label class="block text-sm font-medium">
           {{ english ? 'Password' : 'Mot de passe' }}
           <input
