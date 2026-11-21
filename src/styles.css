@@ -21,7 +21,7 @@ body {
   --v8-muted: #b9a9b5;
   --v8-good: #a7d6be;
 }
-.v8-shell {
+.v2-app-shell {
   min-height: 100vh;
   background: var(--v8-bg);
   color: var(--v8-text);
@@ -289,6 +289,118 @@ body {
   .v8-age-gate section {
     width: 100%;
   }
+}
+
+/* Restore the dark form theme inside the Nuxt v8 shell. */
+.v8-shell {
+  --v2-bg: var(--v8-bg);
+  --v2-panel: var(--v8-panel);
+  --v2-border: var(--v8-line);
+  --v2-pink: var(--v8-pink);
+  --v2-hot: var(--v8-rose);
+  --v2-muted: var(--v8-muted);
+}
+
+.v2-app-shell .v2-auth-page .v2-search-panel {
+  border-color: var(--v8-line);
+  background: var(--v8-panel);
+  box-shadow: 0 12px 35px rgb(0 0 0 / 0.18);
+}
+
+.v2-app-shell .v2-auth-page label {
+  color: #d6c6d0;
+}
+
+.v2-app-shell .v2-auth-page input,
+.v2-app-shell .v2-auth-page select {
+  border: 1px solid #544450;
+  background: #18161b;
+  color: #fff;
+}
+
+.v2-app-shell .v2-auth-page input:focus,
+.v2-app-shell .v2-auth-page select:focus {
+  border-color: var(--v8-pink);
+  outline: 2px solid rgb(239 185 208 / 0.2);
+  outline-offset: 1px;
+}
+
+.v2-app-shell .v2-auth-page input::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
+
+.v2-app-shell .v2-auth-page .v2-button.primary {
+  border-color: var(--v8-pink);
+  background: var(--v8-pink);
+  color: #281620;
+}
+
+.v2-app-shell .v2-auth-page .v2-button.primary:hover {
+  background: var(--v8-rose);
+  color: #fff;
+}
+
+/* Keep advertiser dashboard cards and fields on the same dark theme. */
+.v2-app-shell .dashboard-page,
+.v2-app-shell .dashboard-page .soft-card,
+.v2-app-shell .dashboard-page .bg-white {
+  border-color: var(--v8-line);
+  background: var(--v8-panel);
+  color: #f8f1f5;
+}
+
+.v2-app-shell .dashboard-page .bg-white {
+  background: #18161b;
+}
+
+.v2-app-shell .dashboard-page input,
+.v2-app-shell .dashboard-page textarea,
+.v2-app-shell .dashboard-page select {
+  border-color: #544450;
+  background: #18161b;
+  color: #fff;
+}
+
+.v2-app-shell .dashboard-page input::placeholder,
+.v2-app-shell .dashboard-page textarea::placeholder,
+.v2-app-shell .dashboard-page select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
+
+/* Nuxt pages are rendered in v8-shell; keep the advertiser dashboard themed there too. */
+.v8-shell .dashboard-page,
+.v8-shell .dashboard-page .soft-card,
+.v8-shell .dashboard-page .bg-white {
+  border-color: var(--v8-line);
+  background: var(--v8-panel);
+  color: #f8f1f5;
+}
+
+.v8-shell .dashboard-page .bg-white {
+  background: #18161b;
+}
+
+.v8-shell .dashboard-page input,
+.v8-shell .dashboard-page textarea,
+.v8-shell .dashboard-page select {
+  border-color: #544450;
+  background: #18161b;
+  color: #fff;
+}
+
+.v8-shell .dashboard-page input::placeholder,
+.v8-shell .dashboard-page textarea::placeholder,
+.v8-shell .dashboard-page select::placeholder {
+  color: #c8b9c2;
+  opacity: 1;
+}
+
+.v8-shell .v2-auth-page .v2-button.primary {
+  border-color: var(--v8-pink);
+  background: var(--v8-pink);
+  color: #281620;
 }
 .v8-home {
   max-width: 1030px;
