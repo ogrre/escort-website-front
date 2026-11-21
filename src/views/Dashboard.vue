@@ -21,6 +21,7 @@ const copy = computed(() =>
         ageTitle: 'Age confirmation required',
         ageText: 'I confirm that I am 18 or older and authorised to publish this type of content.',
         ageStart: 'Start age verification',
+        verifyBeforePublish: 'Verify your age before publishing',
         details: 'Profile details',
         about: 'Tell visitors about your profile',
         display: 'Display name',
@@ -54,6 +55,7 @@ const copy = computed(() =>
         ageText:
           'Je confirme avoir 18 ans ou plus et être autorisé(e) à publier ce type de contenu.',
         ageStart: 'Démarrer la vérification d’âge',
+        verifyBeforePublish: 'Vérifier votre âge avant de publier',
         details: 'Détails du profil',
         about: 'Présentez votre profil aux visiteurs',
         display: 'Nom affiché',
@@ -190,6 +192,10 @@ async function startAgeVerification() {
 }
 async function publish() {
   if (!listingId.value) return;
+  if (!ageConfirmed.value) {
+    await startAgeVerification();
+    return;
+  }
   try {
     await api.post(`/listings/${listingId.value}/publish`, {}, { headers: headers() });
     message.value = 'Annonce publiée.';
@@ -248,19 +254,6 @@ onMounted(async () => {
         class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
         >{{ copy.active }}</span
       >
-    </div>
-    <div v-if="!ageConfirmed" class="mt-8 rounded-2xl border border-dusty/30 bg-dusty/10 p-5">
-      <h2 class="font-medium">{{ copy.ageTitle }}</h2>
-      <p class="mt-2 text-sm text-zinc-700">
-        {{ copy.ageText }}
-      </p>
-      <button
-        :disabled="confirmingAge"
-        class="mt-4 rounded-full bg-dusty px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
-        @click="startAgeVerification"
-      >
-        {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : copy.ageStart }}
-      </button>
     </div>
     <form class="mt-10 space-y-6" @submit.prevent="save">
       <div class="soft-card space-y-5 p-6">
@@ -363,11 +356,11 @@ onMounted(async () => {
       </button>
       <button
         type="button"
-        :disabled="!ageConfirmed"
+        :disabled="confirmingAge || !listingId"
         class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
         @click="publish"
       >
-        {{ copy.publish }}
+        {{ confirmingAge ? (english ? 'Opening…' : 'Ouverture…') : ageConfirmed ? copy.publish : copy.verifyBeforePublish }}
       </button>
     </form>
     <ListingPhotoManager
