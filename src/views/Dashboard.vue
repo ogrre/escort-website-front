@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { api } from '../lib/api';
 import ListingPhotoManager, { type ListingPhoto } from '../components/ListingPhotoManager.vue';
 import { useCopy } from '../lib/i18n';
+import { normalizeLocations, type City } from '../lib/locations';
 
 const { locale } = useCopy({ fr: 'fr', en: 'en' });
 const english = computed(() => locale.value === 'en');
@@ -86,6 +87,8 @@ const ageConfirmed = ref(
 const confirmingAge = ref(false);
 const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
+const locations = ref<City[]>([]);
+const locationId = ref('');
 const subscription = ref<{ plan?: string; status?: string; ends_at?: string } | null>(null);
 const subscribing = ref(false);
 const contactTypes = ['phone', 'whatsapp', 'snapchat', 'telegram', 'instagram', 'other'];
@@ -149,15 +152,34 @@ function contactLabel(type: string) {
 function headers() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` };
 }
+function syncLocation() {
+  const location = locations.value.find((item) => item.id === locationId.value);
+  if (!location) return;
+  form.city = location.name;
+  form.country = location.country.code;
+}
+function saveError(reason: unknown) {
+  const response = reason as {
+    response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+  };
+  const errors = Object.values(response.response?.data?.errors ?? {}).flat();
+  return errors.join(' ') || response.response?.data?.message || 'Impossible d’enregistrer le profil.';
+}
 async function save() {
-  if (listingId.value) {
-    await api.put(`/listings/${listingId.value}`, { ...form }, { headers: headers() });
-    message.value = 'Profile updated.';
-  } else {
-    const response = await api.post('/listings', { ...form }, { headers: headers() });
-    listingId.value = response.data.data.id;
-    photos.value = (response.data.data.photos ?? []) as ListingPhoto[];
-    message.value = 'Profile created as a draft.';
+  message.value = '';
+  try {
+    const payload = { ...form, location_id: locationId.value };
+    if (listingId.value) {
+      await api.put(`/listings/${listingId.value}`, payload, { headers: headers() });
+      message.value = english.value ? 'Profile updated.' : 'Profil mis à jour.';
+    } else {
+      const response = await api.post('/listings', payload, { headers: headers() });
+      listingId.value = response.data.data.id;
+      photos.value = (response.data.data.photos ?? []) as ListingPhoto[];
+      message.value = english.value ? 'Profile created as a draft.' : 'Profil créé en brouillon.';
+    }
+  } catch (reason: unknown) {
+    message.value = saveError(reason);
   }
 }
 async function startWeeklySubscription() {
@@ -212,6 +234,8 @@ async function publish() {
 }
 onMounted(async () => {
   try {
+    const locationsResponse = await api.get('/locations', { params: { per_page: 100, page: 1 } });
+    locations.value = normalizeLocations(locationsResponse.data.data ?? [], true);
     const userResponse = await api.get('/auth/me', { headers: headers() });
     ageConfirmed.value = Boolean(userResponse.data.age_confirmed);
     localStorage.setItem('user', JSON.stringify(userResponse.data));
@@ -219,8 +243,10 @@ onMounted(async () => {
     subscription.value = (await api.get('/subscription', { headers: headers() })).data.data;
     if (data) {
       listingId.value = data.id;
+      locationId.value = data.location?.id ?? '';
       Object.assign(form, data);
       form.contacts = normalizeContacts(data.contacts);
+      syncLocation();
       photos.value = (data.photos ?? []) as ListingPhoto[];
     }
 
@@ -291,13 +317,17 @@ onMounted(async () => {
         <div class="grid gap-4 md:grid-cols-3">
           <label class="block text-sm font-medium"
             >{{ copy.city }}
-            <input
-              v-model="form.city"
+            <select
+              v-model="locationId"
               required
-              maxlength="100"
               class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3"
-              placeholder="Paris"
-            />
+              @change="syncLocation"
+            >
+              <option value="">Choisir une ville</option>
+              <option v-for="location in locations" :key="location.id" :value="location.id">
+                {{ location.name }} ({{ location.country.code }})
+              </option>
+            </select>
           </label>
           <label class="block text-sm font-medium"
             >{{ copy.country }}
