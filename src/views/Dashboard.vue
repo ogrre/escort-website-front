@@ -34,6 +34,9 @@ const copy = computed(() =>
         status: 'Visible status',
         save: 'Save profile',
         create: 'Create profile',
+        saving: 'Saving…',
+        createDraftHint: 'Create the draft first, then add your photos below.',
+        photosHint: 'Photos are added immediately. Reordering is saved automatically.',
         publish: 'Publish listing',
         placeholders: {
           name: 'Your name or professional name',
@@ -68,6 +71,9 @@ const copy = computed(() =>
         status: 'Statut visible',
         save: 'Enregistrer le profil',
         create: 'Créer le profil',
+        saving: 'Enregistrement…',
+        createDraftHint: 'Créez d’abord le brouillon, puis ajoutez vos photos ci-dessous.',
+        photosHint: 'Les photos sont ajoutées immédiatement. Leur ordre est enregistré automatiquement.',
         publish: 'Publier l’annonce',
         placeholders: {
           name: 'Votre nom ou nom professionnel',
@@ -85,6 +91,7 @@ const ageConfirmed = ref(
   ),
 );
 const confirmingAge = ref(false);
+const saving = ref(false);
 const listingId = ref<string | null>(null);
 const photos = ref<ListingPhoto[]>([]);
 const locations = ref<City[]>([]);
@@ -166,7 +173,9 @@ function saveError(reason: unknown) {
   return errors.join(' ') || response.response?.data?.message || 'Impossible d’enregistrer le profil.';
 }
 async function save() {
+  if (saving.value) return;
   message.value = '';
+  saving.value = true;
   try {
     const payload = { ...form, location_id: locationId.value };
     if (listingId.value) {
@@ -180,6 +189,8 @@ async function save() {
     }
   } catch (reason: unknown) {
     message.value = saveError(reason);
+  } finally {
+    saving.value = false;
   }
 }
 async function startWeeklySubscription(): Promise<boolean> {
@@ -398,13 +409,38 @@ onMounted(async () => {
             class="mt-3 w-full rounded-lg border border-zinc-300 p-2 disabled:bg-zinc-100"
         /></label>
       </div>
-      <button class="rounded-full bg-dusty px-6 py-3 font-medium text-white">
-        {{ listingId ? copy.save : copy.create }}
+      <div v-if="!listingId" class="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          :disabled="saving"
+          class="rounded-full bg-dusty px-6 py-3 font-medium text-white disabled:cursor-wait disabled:opacity-60"
+        >
+          {{ saving ? copy.saving : copy.create }}
+        </button>
+        <p class="text-sm text-stone-500">{{ copy.createDraftHint }}</p>
+      </div>
+    </form>
+    <ListingPhotoManager
+      v-if="listingId"
+      v-model:photos="photos"
+      :listing-uuid="listingId"
+      class="mt-8"
+      @message="message = $event"
+    />
+    <p v-if="listingId" class="mt-3 text-sm text-stone-500">{{ copy.photosHint }}</p>
+    <div v-if="listingId" class="mt-6 flex flex-wrap gap-3">
+      <button
+        type="button"
+        :disabled="saving"
+        class="rounded-full bg-dusty px-6 py-3 font-medium text-white disabled:cursor-wait disabled:opacity-60"
+        @click="save"
+      >
+        {{ saving ? copy.saving : copy.save }}
       </button>
       <button
         type="button"
-        :disabled="confirmingAge || subscribing || !listingId"
-        class="ml-3 rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
+        :disabled="confirmingAge || subscribing"
+        class="rounded-full border border-dusty px-6 py-3 font-medium text-dusty-dark disabled:cursor-not-allowed disabled:opacity-40"
         @click="publish"
       >
         {{
@@ -425,13 +461,6 @@ onMounted(async () => {
                   : copy.verifyBeforePublish
         }}
       </button>
-    </form>
-    <ListingPhotoManager
-      v-if="listingId"
-      v-model:photos="photos"
-      :listing-uuid="listingId"
-      class="mt-8"
-      @message="message = $event"
-    />
+    </div>
   </section>
 </template>
