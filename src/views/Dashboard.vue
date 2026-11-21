@@ -287,7 +287,7 @@ onMounted(async () => {
         <p class="mt-1 text-sm text-stone-500">{{ copy.activeHint }}</p>
       </div>
       <span
-        v-else
+        v-if="subscription?.status === 'active'"
         class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800"
         >{{ copy.active }}</span
       >
