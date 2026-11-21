@@ -198,9 +198,9 @@ function drop(index: number) {
   <section class="soft-card space-y-5 p-6" aria-labelledby="photos-title">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <p class="eyebrow">{{ english ? 'Gallery' : 'Galerie' }}</p>
+        <p class="eyebrow">{{ english ? 'Listing photos' : 'Photos de l’annonce' }}</p>
         <h2 id="photos-title" class="mt-2 text-2xl font-light">
-          {{ english ? 'Your photos' : 'Vos photos' }}
+          {{ english ? 'Photos' : 'Photos' }}
         </h2>
         <p class="mt-2 text-sm text-stone-500">
           {{
@@ -301,35 +301,28 @@ function drop(index: number) {
       }}
     </div>
 
-    <div class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+    <div class="grid gap-3 md:grid-cols-2">
       <label class="block text-sm font-medium">
         {{ english ? 'Alternative text (optional)' : 'Texte alternatif (facultatif)' }}
         <input
-          v-model="altText"
           type="text"
+          v-model="altText"
           maxlength="255"
-          :placeholder="english ? 'Briefly describe the photo' : 'Décrivez brièvement la photo'"
+          :placeholder="english ? 'Optional description for the selected photos' : 'Description facultative des photos sélectionnées'"
           class="mt-2 w-full rounded-xl border border-zinc-300 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
         />
       </label>
-      <label
-        class="inline-flex h-12 cursor-pointer items-center justify-center rounded-full bg-dusty px-5 text-sm font-medium text-white transition hover:bg-dusty-dark has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
-      >
-        <span>{{
-          uploading
-            ? english
-              ? 'Adding…'
-              : 'Ajout…'
-            : english
-              ? 'Add photos'
-              : 'Ajouter des photos'
-        }}</span>
+      <label class="block text-sm font-medium">
+        {{ english ? 'Photos' : 'Photos' }}
+        <span class="mt-3 block text-xs font-normal text-stone-500">
+          {{ english ? 'Select one or more files. They are uploaded immediately.' : 'Sélectionnez un ou plusieurs fichiers. L’ajout est immédiat.' }}
+        </span>
         <input
           :key="inputKey"
           type="file"
           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
           multiple
-          class="sr-only"
+          class="mt-2 block w-full cursor-pointer rounded-xl border border-zinc-300 bg-white p-3 text-sm text-stone-700 file:mr-3 file:rounded-lg file:border-0 file:bg-dusty file:px-4 file:py-2 file:font-medium file:text-white dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
           :disabled="uploading || remainingSlots === 0"
           @change="upload"
         />

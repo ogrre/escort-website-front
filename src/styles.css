@@ -1575,8 +1575,8 @@ body {
 .dashboard-page textarea,
 .dashboard-page select {
   border-color: #544450;
-  background: #18161b;
-  color: #fff;
+  background: #18161b !important;
+  color: #fff !important;
   font-weight: 400;
 }
 .dashboard-page input::placeholder,
