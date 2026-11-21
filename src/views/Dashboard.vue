@@ -15,6 +15,7 @@ const copy = computed(() =>
           'Complete your profile, activate the weekly plan, then verify your age before publishing.',
         subscription: 'Weekly subscription',
         publishWeek: 'Publish for one week',
+        activeHint: 'Your profile remains active for 7 days after payment.',
         active: 'Weekly plan active',
         choose: 'Choose weekly plan',
         ageTitle: 'Age confirmation required',
@@ -46,6 +47,7 @@ const copy = computed(() =>
           'Complétez votre profil, activez le forfait hebdomadaire, puis vérifiez votre âge avant de publier.',
         subscription: 'Abonnement hebdomadaire',
         publishWeek: 'Publier pendant une semaine',
+        activeHint: 'Votre profil reste actif pendant 7 jours après le paiement.',
         active: 'Forfait hebdomadaire actif',
         choose: 'Choisir le forfait hebdomadaire',
         ageTitle: 'Confirmation d’âge obligatoire',
@@ -231,9 +233,7 @@ onMounted(async () => {
       <div>
         <p class="eyebrow">{{ copy.subscription }}</p>
         <h2 class="mt-2 text-xl font-medium">{{ copy.publishWeek }}</h2>
-        <p class="mt-1 text-sm text-stone-500">
-          Your profile remains active for 7 days after payment.
-        </p>
+        <p class="mt-1 text-sm text-stone-500">{{ copy.activeHint }}</p>
       </div>
       <button
         v-if="subscription?.status !== 'active'"
