@@ -2254,8 +2254,13 @@ body {
 }
 .v2-signup-cta {
   width: 100%;
-  margin-top: 18px;
+  margin-top: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
   text-align: center;
+}
+.v2-signup-card .v2-button.primary {
+  color: #281620;
 }
 .v2-signup-card .v2-signup-cta.ghost {
   border-color: #6d5263;
