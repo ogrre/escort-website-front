@@ -369,7 +369,6 @@ body {
   outline: 2px solid rgb(239 185 208 / 0.2);
   outline-offset: 1px;
 }
-
 /* Keep advertiser dashboard cards and fields on the same dark theme. */
 .v2-app-shell .dashboard-page,
 .v2-app-shell .dashboard-page .soft-card,
