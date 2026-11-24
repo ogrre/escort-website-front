@@ -172,9 +172,31 @@ function saveError(reason: unknown) {
   const errors = Object.values(response.response?.data?.errors ?? {}).flat();
   return errors.join(' ') || response.response?.data?.message || 'Impossible d’enregistrer le profil.';
 }
+function validateForm() {
+  if (!form.name.trim()) return english.value ? 'Enter a display name.' : 'Indiquez un nom affiché.';
+  if (form.description.trim().length < 80) {
+    return english.value
+      ? 'The description must contain at least 80 characters.'
+      : 'La description doit contenir au moins 80 caractères.';
+  }
+  if (!locationId.value) return english.value ? 'Choose a city.' : 'Choisissez une ville.';
+  if (!form.country.trim()) return english.value ? 'Enter a country code.' : 'Indiquez un code pays.';
+  if (!Number.isInteger(form.age) || form.age < 18 || form.age > 80) {
+    return english.value ? 'Enter an age between 18 and 80.' : 'Indiquez un âge entre 18 et 80 ans.';
+  }
+  if (!form.services.some((service) => service.trim())) {
+    return english.value ? 'Enter at least one service.' : 'Indiquez au moins un service.';
+  }
+  return '';
+}
 async function save() {
   if (saving.value) return;
   message.value = '';
+  const validationError = validateForm();
+  if (validationError) {
+    message.value = validationError;
+    return;
+  }
   saving.value = true;
   try {
     const payload = { ...form, location_id: locationId.value };
@@ -309,7 +331,7 @@ onMounted(async () => {
         {{ english ? 'Payment is requested when you publish.' : 'Le paiement est demandé lors de la publication.' }}
       </span>
     </div>
-    <form class="mt-10 space-y-6" @submit.prevent="save">
+    <form class="mt-10 space-y-6" novalidate @submit.prevent="save">
       <div class="soft-card space-y-5 p-6">
         <div>
           <p class="eyebrow">{{ copy.details }}</p>
