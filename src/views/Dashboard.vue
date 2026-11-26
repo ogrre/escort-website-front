@@ -37,6 +37,9 @@ const copy = computed(() =>
         saving: 'Saving…',
         createDraftHint: 'Create the draft first, then add your photos below.',
         photosHint: 'Photos are added immediately. Reordering is saved automatically.',
+        ageStarted: 'Age verification opened in a new tab. Return here when it is complete.',
+        ageStartFailed: 'Age verification could not be started.',
+        ageConfirmed: 'Age verified. You can now publish your listing.',
         publish: 'Publish listing',
         placeholders: {
           name: 'Your name or professional name',
@@ -74,6 +77,9 @@ const copy = computed(() =>
         saving: 'Enregistrement…',
         createDraftHint: 'Créez d’abord le brouillon, puis ajoutez vos photos ci-dessous.',
         photosHint: 'Les photos sont ajoutées immédiatement. Leur ordre est enregistré automatiquement.',
+        ageStarted: 'La vérification d’âge est ouverte dans un nouvel onglet. Revenez ici une fois terminée.',
+        ageStartFailed: 'La vérification d’âge n’a pas pu démarrer.',
+        ageConfirmed: 'Âge vérifié. Vous pouvez maintenant publier votre annonce.',
         publish: 'Publier l’annonce',
         placeholders: {
           name: 'Votre nom ou nom professionnel',
@@ -247,15 +253,21 @@ async function startAgeVerification() {
       { return_url: `${window.location.origin}/dashboard` },
       { headers: headers() },
     );
-    if (verificationWindow) {
-      verificationWindow.location.href = response.data.verification_url;
-    } else {
-      window.location.href = response.data.verification_url;
+    const verificationUrl = response.data?.verification_url;
+    if (typeof verificationUrl !== 'string' || !/^https:\/\//.test(verificationUrl)) {
+      throw new Error('Missing Yoti verification URL');
     }
-    message.value = 'Vérification ouverte dans un nouvel onglet. Revenez ici une fois terminée.';
-  } catch {
+    if (verificationWindow && !verificationWindow.closed) {
+      verificationWindow.location.replace(verificationUrl);
+    } else {
+      window.location.assign(verificationUrl);
+    }
+    message.value = copy.value.ageStarted;
+  } catch (reason: unknown) {
     verificationWindow?.close();
-    message.value = 'La confirmation d’âge n’a pas pu être enregistrée.';
+    const response = reason as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+    const errors = Object.values(response.response?.data?.errors ?? {}).flat();
+    message.value = errors.join(' ') || response.response?.data?.message || copy.value.ageStartFailed;
   } finally {
     confirmingAge.value = false;
   }
@@ -285,6 +297,9 @@ onMounted(async () => {
     const userResponse = await api.get('/auth/me', { headers: headers() });
     ageConfirmed.value = Boolean(userResponse.data.age_confirmed);
     localStorage.setItem('user', JSON.stringify(userResponse.data));
+    if (new URLSearchParams(window.location.search).get('age_verification') === 'success') {
+      message.value = copy.value.ageConfirmed;
+    }
     const data = (await api.get('/my/listings', { headers: headers() })).data.data[0];
     subscription.value = (await api.get('/subscription', { headers: headers() })).data.data;
     if (data) {
